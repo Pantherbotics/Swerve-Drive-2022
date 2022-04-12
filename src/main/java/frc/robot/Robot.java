@@ -21,93 +21,91 @@ import frc.robot.subsystems.Drivetrain;
  * project.
  */
 public class Robot extends TimedRobot {
-  private static final String DEFAULT_AUTO = "Default";
-  private static final String CUSTOM_AUTO = "My Auto";
-  private String autoSelected;
-  private final SendableChooser<String> chooser = new SendableChooser<>();
-  public static final Drivetrain drivetrain = new Drivetrain();
+    private static final String DEFAULT_AUTO = "Default";
+    private static final String CUSTOM_AUTO = "My Auto";
+    private String autoSelected;
+    private final SendableChooser<String> chooser = new SendableChooser<>();
+    public static final Drivetrain drivetrain = new Drivetrain();
 
-  public static final OI oi = new OI();
-  /**
-   * This function is run when the robot is first started up and should be
-   * used for any initialization code.
-   */
-  @Override
-  public void robotInit() {
-    chooser.setDefaultOption("Default Auto", DEFAULT_AUTO);
-    chooser.addOption("My Auto", CUSTOM_AUTO);
-    SmartDashboard.putData("Auto choices", chooser);
-
-  }
-
-  /**
-   * This function is called every robot packet, no matter the mode. Use
-   * this for items like diagnostics that you want ran during disabled,
-   * autonomous, teleoperated and test.
-   *
-   * <p>This runs after the mode specific periodic functions, but before
-   * LiveWindow and SmartDashboard integrated updating.
-   */
-  @Override
-  public void robotPeriodic() {
-    drivetrain.updateDashboard();
-  }
-
-  /**
-   * This autonomous (along with the chooser code above) shows how to select
-   * between different autonomous modes using the dashboard. The sendable
-   * chooser code works with the Java SmartDashboard. If you prefer the
-   * LabVIEW Dashboard, remove all of the chooser code and uncomment the
-   * getString line to get the auto name from the text box below the Gyro
-   *
-   * <p>You can add additional auto modes by adding additional comparisons to
-   * the switch structure below with additional strings. If using the
-   * SendableChooser make sure to add them to the chooser code above as well.
-   */
-  @Override
-  public void autonomousInit() {
-    autoSelected = chooser.getSelected();
-    // autoSelected = SmartDashboard.getString("Auto Selector", DEFAULT_AUTO);
-    System.out.println("Auto selected: " + autoSelected);
-  }
-
-  /**
-   * This function is called periodically during autonomous.
-   */
-  @Override
-  public void autonomousPeriodic() {
-    switch (autoSelected) {
-      case CUSTOM_AUTO:
-        // Put custom auto code here
-        break;
-      case DEFAULT_AUTO:
-      default:
-        // Put default auto code here
-        break;
+    public static final OI oi = new OI();
+    /**
+     * This function is run when the robot is first started up and should be
+     * used for any initialization code.
+     */
+    @Override
+    public void robotInit() {
+        chooser.setDefaultOption("Default Auto", DEFAULT_AUTO);
+        chooser.addOption("My Auto", CUSTOM_AUTO);
+        SmartDashboard.putData("Auto choices", chooser);
     }
-  }
 
-  /**
-   * This function is called periodically during operator control.
-   */
-  @Override
-  public void teleopPeriodic() {
-    /*
-    DRIVETRAIN.setAllPower(oi.getLeftMagnitude());
-    DRIVETRAIN.setAllAngle(oi.getLeftJoystickAngle());
-    */
-    SmartDashboard.putNumber("Left Joystick X", oi.getLeftXAxis());
-    SmartDashboard.putNumber("Left Joystick Y", oi.getLeftYAxis());
-    SmartDashboard.putNumber("Right Joystick X", oi.getRightXAxis());
-    Scheduler.getInstance().run();
-  }
+    /**
+     * This function is called every robot packet, no matter the mode. Use
+     * this for items like diagnostics that you want ran during disabled,
+     * autonomous, teleoperated and test.
+     *
+     * <p>This runs after the mode specific periodic functions, but before
+     * LiveWindow and SmartDashboard integrated updating.
+     */
+    @Override
+    public void robotPeriodic() {
+        drivetrain.updateDashboard();
+    }
 
-  /**
-   * This function is called periodically during test mode.][\
-   *
-   */
-  @Override
-  public void testPeriodic() {
-  }
+    /**
+     * This autonomous (along with the chooser code above) shows how to select
+     * between different autonomous modes using the dashboard. The sendable
+     * chooser code works with the Java SmartDashboard. If you prefer the
+     * LabVIEW Dashboard, remove all of the chooser code and uncomment the
+     * getString line to get the auto name from the text box below the Gyro
+     *
+     * <p>You can add additional auto modes by adding additional comparisons to
+     * the switch structure below with additional strings. If using the
+     * SendableChooser make sure to add them to the chooser code above as well.
+     */
+    @Override
+    public void autonomousInit() {
+        autoSelected = chooser.getSelected();
+        // autoSelected = SmartDashboard.getString("Auto Selector", DEFAULT_AUTO);
+        System.out.println("Auto selected: " + autoSelected);
+    }
+
+    /**
+     * This function is called periodically during autonomous.
+     */
+    @Override
+    public void autonomousPeriodic() {
+        switch (autoSelected) {
+            case CUSTOM_AUTO:
+                // Put custom auto code here
+                break;
+            case DEFAULT_AUTO:
+            default:
+                // Put default auto code here
+                break;
+        }
+    }
+
+    /**
+     * This function is called periodically during operator control.
+     */
+    @Override
+    public void teleopPeriodic() {
+        drivetrain.setAllPower(oi.getLeftMagnitude());
+        drivetrain.setAllAngle(oi.getLeftJoystickAngle());
+
+        SmartDashboard.putNumber("Left Joystick X", oi.getLeftXAxis());
+        SmartDashboard.putNumber("Left Joystick Y", oi.getLeftYAxis());
+        SmartDashboard.putNumber("Right Joystick X", oi.getRightXAxis());
+        Scheduler.getInstance().run();
+    }
+
+    /**
+     * This function is called periodically during test mode.][\
+     *
+     */
+    @Override
+    public void testPeriodic() {
+    }
 
 }

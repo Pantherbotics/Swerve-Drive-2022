@@ -10,8 +10,8 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj.command.Command;
 import frc.robot.Constants;
 import frc.robot.Robot;
-import frc.robot.Util.DriveCommand;
-import frc.robot.Util.ModuleLocation;
+import frc.robot.util.DriveCommand;
+import frc.robot.util.ModuleLocation;
 
 import static frc.robot.Robot.drivetrain;
 import static frc.robot.Robot.oi;

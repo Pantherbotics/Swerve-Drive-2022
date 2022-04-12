@@ -1,16 +1,17 @@
-package frc.robot;
+package frc.robot.util;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.StatusFrame;
+import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.SparkMaxAnalogSensor;
 import edu.wpi.first.wpilibj.Notifier;
-import frc.robot.Util.DriveCommand;
-import frc.robot.Util.WrappedTalonSRX;
+import frc.robot.Constants;
 
 @SuppressWarnings("unused")
 public class SwerveModule{
     //private AnalogInput SteeringAnalog = new AnalogInput(0);
-    private final WrappedTalonSRX mDrive, mSteering;
+    private final WrappedTalonSRX mDrive;
+    private final WrappedCANSparkMax mSteering;
     private volatile double sumError, errorChange, lastError, currentError, pidOutput;
     private final boolean isReversed;
     private double setpoint;
@@ -36,7 +37,7 @@ public class SwerveModule{
      */
     public SwerveModule(int kSteeringID, int kDriveID, boolean isReversed, double offset, double kP, double kI, double kD){
         mDrive = new WrappedTalonSRX(kDriveID);
-        mSteering = new WrappedTalonSRX(kSteeringID);
+        mSteering = new WrappedCANSparkMax(kSteeringID, CANSparkMaxLowLevel.MotorType.kBrushless);
         this.offset = offset;
 
         lastAngle = 0;
@@ -46,15 +47,15 @@ public class SwerveModule{
         mSteering.reset();
 
         //Configure steering Talon SRX
-        mSteering.configSelectedFeedbackSensor(FeedbackDevice.Analog, Constants.kPIDLoopIdx, Constants.kTimeoutMs);
-        mSteering.configOpenloopRamp(0, Constants.kTimeoutMs);      //this is what we were missing!
-        mSteering.configPeakCurrentDuration(Constants.kPeakCurrentDuration, Constants.kTimeoutMs);
-        mSteering.configPeakCurrentLimit(Constants.kPeakCurrentLimit, Constants.kTimeoutMs);
-        mSteering.configContinuousCurrentLimit(Constants.kSustainedCurrentLimit, Constants.kTimeoutMs);
-        mSteering.enableCurrentLimit(true);
-        mSteering.setStatusFramePeriod(StatusFrame.Status_4_AinTempVbat, 10, 0);
+        //mSteering.configSelectedFeedbackSensor(FeedbackDevice.Analog, Constants.kPIDLoopIdx, Constants.kTimeoutMs);
+        //mSteering.configOpenloopRamp(0, Constants.kTimeoutMs);      //this is what we were missing!
+        //mSteering.configPeakCurrentDuration(Constants.kPeakCurrentDuration, Constants.kTimeoutMs);
+        //mSteering.configPeakCurrentLimit(Constants.kPeakCurrentLimit, Constants.kTimeoutMs);
+        //mSteering.configContinuousCurrentLimit(Constants.kSustainedCurrentLimit, Constants.kTimeoutMs);
+        //mSteering.enableCurrentLimit(true);
+        //mSteering.setStatusFramePeriod(StatusFrame.Status_4_AinTempVbat, 10, 0);
         mSteering.setInverted(true);
-        mSteering.setSensorPhase(true);
+        //mSteering.setSensorPhase(true);
 
         //Configure drive Talon SRX
         mDrive.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, Constants.kPIDLoopIdx, Constants.kTimeoutMs);
@@ -80,7 +81,7 @@ public class SwerveModule{
             errorChange = (currentError-lastError)/dt;
 */
             pidOutput = kP * currentError; //+ kI * sumError + kD * errorChange; //you guys know this, or at least you better...
-            mSteering.set(ControlMode.PercentOutput, pidOutput);
+            mSteering.set(pidOutput);
             //lastError = currentError;   //update the last error to be the current error
         });
 
@@ -102,7 +103,7 @@ public class SwerveModule{
      */
 
     public double getSteeringDegrees(){
-        double steeringPosition = mSteering.getSelectedSensorPosition(Constants.kPIDLoopIdx);
+        double steeringPosition = mSteering.getAnalog(SparkMaxAnalogSensor.Mode.kRelative).getPosition();
 
         if(steeringPosition >= 0){
             return normalizeEncoder(kPositiveRotationMin, kPositiveRotationMax, steeringPosition)-180;
@@ -181,7 +182,7 @@ public class SwerveModule{
     }
 
     public void setSteeringPower(double x){
-        mSteering.set(ControlMode.PercentOutput, x);
+        mSteering.set(x);
     }
 
     public void set(double degrees, double power){
@@ -212,7 +213,7 @@ public class SwerveModule{
     }
 
     public double getRawSteeringEncoder(){
-        return mSteering.getSelectedSensorPosition(0);
+        return mSteering.getAnalog(SparkMaxAnalogSensor.Mode.kRelative).getPosition();
     }
 
     public double getSpeed(){

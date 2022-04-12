@@ -1,4 +1,4 @@
-package frc.robot.Util;
+package frc.robot.util;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
@@ -6,6 +6,7 @@ import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
+@SuppressWarnings("unused")
 public class WrappedTalonSRX extends TalonSRX {
     protected double mLastSet = Double.NaN;
     protected ControlMode mLastControlMode = null;
