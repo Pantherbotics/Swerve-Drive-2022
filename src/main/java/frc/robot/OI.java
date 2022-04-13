@@ -1,44 +1,24 @@
 package frc.robot;
+//imports
+//import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.XboxController;
+//import edu.wpi.first.wpilibj.GenericHID.Hand;//allows extra joystic if needed
 
-import edu.wpi.first.wpilibj.Joystick;
 
-@SuppressWarnings("unused")
-public class OI{
-
-    public Joystick stick = new Joystick(Constants.kJoyStick);
-    public OI(){}
-
-    public double getLeftAngle(){
-        return stick.getDirectionDegrees();
+public class OI {
+    //class declarations
+    private XboxController m_stick;
+    //constructo
+    public OI(){
+    m_stick = new XboxController(0);
     }
-
-    public double getLeftJoystickAngle(){
-        return Math.toDegrees(Math.atan2(stick.getRawAxis(0), -stick.getRawAxis(1)));
-    }
-
-    public double getLeftXAxis(){
-        return Math.abs(stick.getRawAxis(0)) > 0.1 ? stick.getRawAxis(0) : 0;
-    }
-
-    public double getLeftYAxis(){
-        /*
-        double val = ((-stick.getRawAxis(1)) + Constants.kLeftYOffset) * (1.0/(1.0-Constants.kLeftYOffset));
-        val = val > 1.0 ? 1.0 : val;
-        val = val < -1.0 ? -1.0 : val;
-        val = Math.abs(val) < .05 ? 0 : val;
-        return val;*/
-        return Math.abs(stick.getRawAxis(1)) > 0.1 ? stick.getRawAxis(1) : 0;
-    }
-
-    public double getRightXAxis(){
-
-        if(stick.getRawButton(1))
-            return (Math.abs(stick.getRawAxis(2)) > 0.1 ? stick.getRawAxis(2) : 0) * 0.25;
-        else
-            return 0;
-    }
-
-    public double getLeftMagnitude(){
-        return Math.hypot(stick.getRawAxis(1), stick.getRawAxis(0));
-    }
+    //methods
+    public double LeftX  (){  return m_stick.getRawAxis(0);  }
+    public double LeftY  (){  return m_stick.getRawAxis(1);  }
+    public double RightX (){  return m_stick.getRawAxis(4);  }
+    public double RightY (){  return m_stick.getRawAxis(5);  }
+    public boolean XBut(){ return m_stick.getXButtonPressed();}
+    public boolean YBut(){ return m_stick.getYButtonPressed();}
+    public boolean ABut(){ return m_stick.getAButtonPressed();}
+    public boolean BBut(){ return m_stick.getBButtonPressed();}
 }
