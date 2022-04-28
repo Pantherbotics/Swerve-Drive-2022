@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("unused")
 public class Drivetrain extends SubsystemBase {
+    private final RobotContainer robotContainer;
     private final Wheel LeftFront;
     private final Wheel RightFront;
     private final Wheel LeftRear;
@@ -30,6 +31,7 @@ public class Drivetrain extends SubsystemBase {
     public double targetGyro = 0;
     public double initialGyro = 0;
     public Drivetrain(RobotContainer robotContainer) {
+        this.robotContainer = robotContainer;
         //Steering (Positive is Clockwise Looking at bottom of robot)
         LeftFront  = new Wheel(1, -75);
         RightFront = new Wheel(2, 165);
@@ -41,29 +43,15 @@ public class Drivetrain extends SubsystemBase {
             @Override
             public void run() {
                 setGyroTarget();
-                initialGyro = getGyroRot() % 360;
+                initialGyro = getGyroRot();
             }
         }, 500);
-
-        AtomicBoolean previousTrue = new AtomicBoolean(false);
-        Notifier notifier = new Notifier(() -> {
-            double steerAxis = robotContainer.pJoy.getRawAxis(4);
-            SmartDashboard.putNumber("SteerAxis", steerAxis);
-            if (Math.abs(steerAxis) >= 0.05) {
-                targetGyro += steerAxis*2D;
-                previousTrue.set(true);
-            }else if (previousTrue.get()) {
-                //targetGyro = getGyroRot();
-                previousTrue.set(false);
-            }
-        });
-        notifier.startPeriodic(20/1000D);
     }
 
     public void zeroGyro() { gyro.reset(); }
-    public void setGyroTarget() { targetGyro = getGyroRot() % 360; }
+    public void setGyroTarget() { targetGyro = getGyroRot(); }
     public double getGyroRot() {
-        return gyro.getAngle() % 360;
+        return gyro.getAngle();
     }
 
 
@@ -71,7 +59,18 @@ public class Drivetrain extends SubsystemBase {
         this.mode = mode;
     }
 
+    boolean rotating = false;
     public void runSwerve(double XL, double YL, double XR, double YR) {
+        //Handle rotation
+        double steerAxis = robotContainer.pJoy.getRawAxis(4);
+        SmartDashboard.putNumber("SteerAxis", steerAxis);
+        if (Math.abs(steerAxis) >= 0.05) {
+            targetGyro += steerAxis*2D;
+            rotating = true;
+        }else if (true) {
+            targetGyro = getGyroRot();
+            rotating = false;
+        }
 
         //Car mode. Front wheel only steering.   Arcade control
         if (mode == 1) {
@@ -135,32 +134,45 @@ public class Drivetrain extends SubsystemBase {
             if (Math.abs(XL) <= 0.05) { XL = 0; }
             if (Math.abs(YL) <= 0.05) { YL = 0; }
 
-            double gyroErrorDeg = targetGyro - getGyroRot();
+            double gyroErrorDeg = targetGyro - getGyroRot(); //For keeping the robot rotated
             double offset = initialGyro - getGyroRot(); //For Field-Oriented Swerve
-            double rotX = gyroErrorDeg/50 + offset/100;//gyroErrorDeg/60;
-            double rotY = gyroErrorDeg/50 + offset/100;//gyroErrorDeg/60;
+            double rotX = gyroErrorDeg/100 + offset/100;
+            double rotY = gyroErrorDeg/100 + offset/100;
 
             SmartDashboard.putNumber("GyroInit", initialGyro);
             SmartDashboard.putNumber("Offset", offset);
 
-            //calculate base vectors
-            double X1 = XL+rotX;//left Front
-            double Y1 = YL+rotY;
-            double tAng1 = -Math.atan2(Y1,X1)*180/Math.PI+90;
-            double X2 = XL+rotX;//Right Front
-            double Y2 = YL-rotY;
-            double tAng2 = -Math.atan2(Y2,X2)*180/Math.PI+90;
-            double X3 = XL-rotX;//Right Rear
-            double Y3 = YL-rotY;
-            double tAng3 = -Math.atan2(Y3,X3)*180/Math.PI+90;
-            double X4 = XL-rotX;//Left Rear
-            double Y4 = YL+rotX;
-            double tAng4 = -Math.atan2(Y4,X4)*180/Math.PI+90;
-            //Calculate speeds (Divide by sqrt2 so that the speed of x1 y1 is also 1
-            double s1 = Math.sqrt(X1*X1+Y1*Y1) / 1.41;
-            double s2 = Math.sqrt(X2*X2+Y2*Y2) / 1.41;
-            double s3 = Math.sqrt(X3*X3+Y3*Y3) / 1.41;
-            double s4 = Math.sqrt(X4*X4+Y4*Y4) / 1.41;
+
+            //calculate base vectors for wheel rotation
+            double WX1 = XL+rotX;//left Front
+            double WY1 = YL+rotY;
+            double tAng1 = -Math.atan2(WY1,WX1)*180/Math.PI+90;
+            double WX2 = XL+rotX;//Right Front
+            double WY2 = YL-rotY;
+            double tAng2 = -Math.atan2(WY2,WX2)*180/Math.PI+90;
+            double WX3 = XL-rotX;//Right Rear
+            double WY3 = YL-rotY;
+            double tAng3 = -Math.atan2(WY3,WX3)*180/Math.PI+90;
+            double WX4 = XL-rotX;//Left Rear
+            double WY4 = YL+rotX;
+            double tAng4 = -Math.atan2(WY4,WX4)*180/Math.PI+90;
+
+            //Calculate base vectors for speed (Divide by sqrt2 so that the speed of x1 y1 is 1)
+            double rotationSpeedScalar = 0.5; //How much does the rotation vector influence speed?
+            double SX1 = XL+rotX*rotationSpeedScalar;//left Front
+            double SY1 = YL+rotY*rotationSpeedScalar;
+            double SX2 = XL+rotX*rotationSpeedScalar;//Right Front
+            double SY2 = YL-rotY*rotationSpeedScalar;
+            double SX3 = XL-rotX*rotationSpeedScalar;//Right Rear
+            double SY3 = YL-rotY*rotationSpeedScalar;
+            double SX4 = XL-rotX*rotationSpeedScalar;//Left Rear
+            double SY4 = YL+rotX*rotationSpeedScalar;
+
+            double s1 = Math.sqrt(SX1 * SX1 + SY1 * SY1) / 1.41;
+            double s2 = Math.sqrt(SX2 * SX2 + SY2 * SY2) / 1.41;
+            double s3 = Math.sqrt(SX3 * SX3 + SY3 * SY3) / 1.41;
+            double s4 = Math.sqrt(SX4 * SX4 + SY4 * SY4) / 1.41;
+
             //Check to see if max speed is <1
             double sMax = Math.max(Math.max(Math.max(s1,s2), s3), s4);
 
@@ -175,9 +187,6 @@ public class Drivetrain extends SubsystemBase {
             RightFront.setState(s2,tAng2);
             RightRear.setState(s3, tAng3);
             LeftRear.setState(s4, tAng4);
-
-            //Remove the rotation vector's speed influence
-            // Aka have it affect rotation but not speed
         }
     }
 }
