@@ -38,6 +38,8 @@ public class SwerveModuleSDS {
         * @param angle: target angle of the wheel in degrees < In the range [0, 360) >
         */
     //This may require edge case handling but for now I believe it will work (given inputs are in range)
+    //TODO: make sure that going from say 0 to 270 will rotate -90 rather than going +270
+    //TODO: handle inputs outside of range
     public void updateModule(double velocity, double angle) {
         double currAngle = getAngle();
         double error = angle - currAngle;
