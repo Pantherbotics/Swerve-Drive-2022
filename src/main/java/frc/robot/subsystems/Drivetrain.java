@@ -56,10 +56,10 @@ public class Drivetrain extends SubsystemBase {
             //rightFront.updateModule(velocity, heading);
             //rightBack.updateModule(velocity, heading);
             //leftBack.updateModule(velocity, heading);
-            leftFront.setState(velocity, heading);
-            rightFront.setState(velocity, heading);
-            rightBack.setState(velocity, heading);
-            leftBack.setState(velocity, heading);
+            leftFront.setState(speed, heading);
+            rightFront.setState(speed, heading);
+            rightBack.setState(speed, heading);
+            leftBack.setState(speed, heading);
         }
 
 
