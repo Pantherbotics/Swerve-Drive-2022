@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.DriveMode;
 import frc.robot.util.PID;
@@ -76,12 +77,12 @@ public class Drivetrain extends SubsystemBase {
             //If we aren't driving using left stick, and right stick calls for rotation, use basic still-rotation
             if (speed <= 0.05 && Math.abs(XR) > 0.05) {
                 //These are optimized movements to rotate the least while flipping wheel speed if needed
-                double dir = XR/XR; //Either -1 or 1. 1 represents clockwise and -1 represents counterclockwise for adjusting wheel dir.
+                double dir = XR/Math.abs(XR); //Either -1 or 1, 1 represents clockwise and -1 represents counterclockwise for adjusting wheel dir.
                 leftFront.setState(XR*dir, 45);
                 rightFront.setState(-XR*dir, 360-45);
                 rightBack.setState(-XR*dir, 45);
                 leftBack.setState(XR*dir, 360-45);
-            
+
             }else {
                 //TODO add rotation stabilization
                 //These two variables are for the wheel rotation adjustment for spinning while driving (stabilized rotation)
@@ -93,19 +94,28 @@ public class Drivetrain extends SubsystemBase {
                 //This variable is for wheel heading (Field-Oriented) if we are driving straight (no turning)
                 double rotFromInitial = initialRotation - getGyroRot(); //Should be +-[0, 360)
 
-                double hLF, hLB, hRF, hRB; //Rotate Adjustments for each wheel (Left Forward, Left Back, etc)
-                if (Math.abs(rotFromInitial) <= 45) { //+-45 the front two are the "front"
+                double hLF = 0, hLB = 0, hRF = 0, hRB = 0; //Rotate Adjustments for each wheel (Left Forward, Left Back, etc)
+                if (Math.abs(rotFromInitial) <= 45 || Math.abs(rotFromInitial) > 315) { //+-45 the front two are the "front", and +->315 are the "front"
                     hLF = deltaTargetRot; hRF = deltaTargetRot;
                     hLB = -deltaTargetRot; hRB = -deltaTargetRot;
                 }else if (rotFromInitial >= 45 && rotFromInitial <= 135) { //Between 45 and 135 the left two are the "front"
                     hLF = deltaTargetRot; hLB = deltaTargetRot;
                     hRF = -deltaTargetRot; hRB = -deltaTargetRot;
+                }else if (rotFromInitial >= 135 && rotFromInitial <= 225) { //Between 135 and 225 the back two are the "front"
+                    hLB = deltaTargetRot; hRB = deltaTargetRot;
+                    hLF = -deltaTargetRot; hRF = -deltaTargetRot;
+                }else if (rotFromInitial >= 225 && rotFromInitial < 315) { //Between 225 and 315 the right two are the "front"
+                    hRF = deltaTargetRot; hRB = deltaTargetRot;
+                    hLF = -deltaTargetRot; hLB = -deltaTargetRot;
                 }else if (rotFromInitial <= -45 && rotFromInitial >= -135) { //Between -45 and -135 the right two are the "front"
                     hLF = -deltaTargetRot; hLB = -deltaTargetRot;
                     hRF = deltaTargetRot; hRB = deltaTargetRot;
-                }else { //Else the back two are the "front"
-                    hLF = -deltaTargetRot; hRF = -deltaTargetRot;
-                    hLB = deltaTargetRot; hRB = deltaTargetRot;
+                }else if (rotFromInitial <= -135 && rotFromInitial >= -225) { //Between -135 and -225 the back two are the "front"
+                    hLB = -deltaTargetRot; hRB = -deltaTargetRot;
+                    hLF = deltaTargetRot; hRF = deltaTargetRot;
+                }else if (rotFromInitial <= -225 && rotFromInitial >= -315) { //Between -225 and -315 the left two are the "front"
+                    hLF = deltaTargetRot; hLB = deltaTargetRot;
+                    hRF = -deltaTargetRot; hRB = -deltaTargetRot;
                 }
 
                 //Update Wheels
