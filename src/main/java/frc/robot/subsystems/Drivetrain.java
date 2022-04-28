@@ -70,6 +70,9 @@ public class Drivetrain extends SubsystemBase {
     double rp100ms = ((maxRPM / 60D) / 10D); //Max Revolutions per 100ms
     boolean justTurned = false;
     public void runSwerve(double XL, double YL, double XR, double YR) {
+        SmartDashboard.putString("DriveStickData", "XL:" + XL + " YL:" + YL + " XR:" + XR + " YR:" + YR);
+        SmartDashboard.putNumber("Left Stick Heading", getHeading(XL, YL));
+
         //Code which can be used in the future when we implement rotation stabilization
         if (Math.abs(XR) >= 0.05) {
             justTurned = true;
@@ -87,13 +90,15 @@ public class Drivetrain extends SubsystemBase {
 
             //If we aren't driving using left stick, and right stick calls for rotation, use basic still-rotation
             if (speed <= 0.05 && Math.abs(XR) > 0.05) {
+                SmartDashboard.putBoolean("A", false);
                 //These are optimized movements to rotate the least while flipping wheel speed if needed
-                double dir = XR/Math.abs(XR); //Either -1 or 1, 1 represents clockwise and -1 represents counterclockwise for adjusting wheel dir.
-                leftFront.setState(XR*dir, rotationAngle);
-                rightFront.setState(-XR*dir, 360-rotationAngle);
-                rightBack.setState(-XR*dir, rotationAngle);
-                leftBack.setState(XR*dir, 360-rotationAngle);
+                double speedScalar = 0.5; //Either -1 or 1, 1 represents clockwise and -1 represents counterclockwise for adjusting wheel dir.
+                leftFront.setState(XR*speedScalar, rotationAngle);
+                rightFront.setState(-XR*speedScalar, 360-rotationAngle);
+                rightBack.setState(-XR*speedScalar, rotationAngle);
+                leftBack.setState(XR*speedScalar, 360-rotationAngle);
             }else {
+                SmartDashboard.putBoolean("A", true);
                 //TODO add rotation stabilization
                 //These two variables are for the wheel rotation adjustment for spinning while driving (stabilized rotation)
                 double rotTargetError = targetRotation - getGyroRot(); //Should be +-[0, 360)
@@ -136,10 +141,10 @@ public class Drivetrain extends SubsystemBase {
                 //rightBack.updateModule(velocity, rotFromInitial + hRB);
                 //leftBack.updateModule(velocity, rotFromInitial + hLB);
 
-                leftFront.setState(speed, rotFromInitial + hLF);
-                rightFront.setState(speed, rotFromInitial + hRF);
-                rightBack.setState(speed, rotFromInitial + hRB);
-                leftBack.setState(speed, rotFromInitial + hLB);
+                leftFront.setState(speed, rotFromInitial + heading + hLF);
+                rightFront.setState(speed, rotFromInitial + heading + hRF);
+                rightBack.setState(speed, rotFromInitial + heading + hRB);
+                leftBack.setState(speed, rotFromInitial + heading + hLB);
             }
 
         }

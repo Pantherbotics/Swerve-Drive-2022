@@ -33,7 +33,7 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         drivetrain.setDefaultCommand(new RunCommand(() ->
-                drivetrain.runSwerve(pJoy.getRawAxis(0), pJoy.getRawAxis(1), pJoy.getRawAxis(4), pJoy.getRawAxis(5))
+                drivetrain.runSwerve(pJoy.getRawAxis(0), -pJoy.getRawAxis(1), pJoy.getRawAxis(4), -pJoy.getRawAxis(5)), drivetrain
         ));
 
         joyBA.whenPressed(new RunDriveMode(drivetrain, DriveMode.FO_SWERVE));
