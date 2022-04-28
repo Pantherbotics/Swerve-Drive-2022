@@ -27,7 +27,8 @@ public class Drivetrain extends SubsystemBase {
     //The offset Angle that the front left wheel would have to adjust in order to rotate the robot clockwise
     // when driving forwards (positively)
     //Other wheels are adjusted based on this value.
-    double rotationAngle = 90 - Math.atan((L/2) / (W/2)); //TODO: implement this //Currently 45 Degrees (square chassis)
+    double rotationAngle = 90 - (Math.atan((L/2) / (W/2)) * 180/Math.PI);
+    //Unsure if this should be used instead of 45 for Field-Oriented Swerve (with "front" and "back" wheels)
 
     public Drivetrain(){
         //Steering
@@ -67,7 +68,17 @@ public class Drivetrain extends SubsystemBase {
 
     double maxRPM = 5000;
     double rp100ms = ((maxRPM / 60D) / 10D); //Max Revolutions per 100ms
+    boolean justTurned = false;
     public void runSwerve(double XL, double YL, double XR, double YR) {
+        //Code which can be used in the future when we implement rotation stabilization
+        if (Math.abs(XR) >= 0.05) {
+            justTurned = true;
+            targetRotation += XR;
+        }else if (justTurned) {
+            justTurned = false;
+            setTargetRotation(getGyroRot());
+        }
+
         if (mode == DriveMode.SWERVE) {
             //Left Joystick Angle (0 is forwards, 90 is to the right, and 180 is backwards, etc.)
             double heading = getHeading(XL, YL);
@@ -78,16 +89,17 @@ public class Drivetrain extends SubsystemBase {
             if (speed <= 0.05 && Math.abs(XR) > 0.05) {
                 //These are optimized movements to rotate the least while flipping wheel speed if needed
                 double dir = XR/Math.abs(XR); //Either -1 or 1, 1 represents clockwise and -1 represents counterclockwise for adjusting wheel dir.
-                leftFront.setState(XR*dir, 45);
-                rightFront.setState(-XR*dir, 360-45);
-                rightBack.setState(-XR*dir, 45);
-                leftBack.setState(XR*dir, 360-45);
-
+                leftFront.setState(XR*dir, rotationAngle);
+                rightFront.setState(-XR*dir, 360-rotationAngle);
+                rightBack.setState(-XR*dir, rotationAngle);
+                leftBack.setState(XR*dir, 360-rotationAngle);
             }else {
                 //TODO add rotation stabilization
                 //These two variables are for the wheel rotation adjustment for spinning while driving (stabilized rotation)
-                //double rotTargetError = targetRotation - getGyroRot(); //Should be +-[0, 360)
-                //double deltaTargetRot = rotTargetError / 8D; //Should be +-[0, 45)
+                double rotTargetError = targetRotation - getGyroRot(); //Should be +-[0, 360)
+                double deltaTargetRot2 = rotTargetError / 8D; //Should be +-[0, 45)
+                SmartDashboard.putNumber("Rotation Target Error", rotTargetError);
+                SmartDashboard.putNumber("Delta Target Rot", deltaTargetRot2);
 
                 double deltaTargetRot = XR * 45D; //Should be +-[0, 45)
 
