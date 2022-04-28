@@ -36,9 +36,9 @@ public class Drivetrain extends SubsystemBase {
         PID steerPID = new PID(0.3, 0, 0, 0, 128, 0.5);
 
         leftFront  = new Wheel(1,  -80);
-        rightFront = new Wheel(2,  160);
+        rightFront = new Wheel(2,  155);
         rightBack  = new Wheel(3,    0);
-        leftBack   = new Wheel(4, -170);
+        leftBack   = new Wheel(4, -160);
 
         //leftFront  = new SwerveModule(1, 1,  2,  3, 0, drivePID, steerPID);
         //rightFront = new SwerveModule(2, 4,  5,  6, 0, drivePID, steerPID);
@@ -98,7 +98,6 @@ public class Drivetrain extends SubsystemBase {
                 rightBack.setState(-XR*speedScalar, rotationAngle);
                 leftBack.setState(XR*speedScalar, 360-rotationAngle);
             }else {
-                SmartDashboard.putBoolean("A", true);
                 //TODO add rotation stabilization
                 //These two variables are for the wheel rotation adjustment for spinning while driving (stabilized rotation)
                 double rotTargetError = targetRotation - getGyroRot(); //Should be +-[0, 360)
@@ -107,6 +106,30 @@ public class Drivetrain extends SubsystemBase {
                 SmartDashboard.putNumber("Delta Target Rot", deltaTargetRot2);
 
                 double deltaTargetRot = XR * 45D; //Should be +-[0, 45)
+
+                //1 is LF, 2 is RF, 3 is RB, 4 is LF (wheel ids for vectors)
+                double rotationComponent = XR * 0.5;
+
+
+                double sin = (Math.sin(heading - getGyroRot()) * 180 / Math.PI) * speed;
+                double cos = (Math.cos(heading - getGyroRot()) * 180 / Math.PI) * speed;
+                double X1 = sin + rotationComponent;
+                double Y1 = cos + rotationComponent;
+                double X2 = sin + rotationComponent;
+                double Y2 = cos - rotationComponent;
+                double X3 = sin - rotationComponent;
+                double Y3 = cos - rotationComponent;
+                double X4 = sin - rotationComponent;
+                double Y4 = cos + rotationComponent;
+
+                getHeading(X1, Y1);
+                double speedScale = Math.sqrt(rotationComponent*rotationComponent + (1+rotationComponent)*(1+rotationComponent));
+                leftFront.setState(Math.sqrt(X1*X1+Y1*Y1)/speedScale, getHeading(X1, Y1));
+                rightFront.setState(Math.sqrt(X2*X2+Y2*Y2)/speedScale, getHeading(X2, Y2));
+                rightBack.setState(Math.sqrt(X3*X3+Y3*Y3)/speedScale, getHeading(X3, Y3));
+                leftBack.setState(Math.sqrt(X4*X4+Y4*Y4)/speedScale, getHeading(X4, Y4));
+
+
 
                 //This variable is for wheel heading (Field-Oriented) if we are driving straight (no turning)
                 double rotFromInitial = initialRotation - getGyroRot(); //Should be +-[0, 360)
@@ -141,10 +164,10 @@ public class Drivetrain extends SubsystemBase {
                 //rightBack.updateModule(velocity, rotFromInitial + hRB);
                 //leftBack.updateModule(velocity, rotFromInitial + hLB);
 
-                leftFront.setState(speed, rotFromInitial + heading + hLF);
-                rightFront.setState(speed, rotFromInitial + heading + hRF);
-                rightBack.setState(speed, rotFromInitial + heading + hRB);
-                leftBack.setState(speed, rotFromInitial + heading + hLB);
+                //leftFront.setState(speed, rotFromInitial + heading + hLF);
+                //rightFront.setState(speed, rotFromInitial + heading + hRF);
+                //rightBack.setState(speed, rotFromInitial + heading + hRB);
+                //leftBack.setState(speed, rotFromInitial + heading + hLB);
             }
 
         }

@@ -6,6 +6,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 @SuppressWarnings("unused")
 public class Wheel {
@@ -18,10 +19,13 @@ public class Wheel {
 
     //Variable declarations
     double error;
-    double kP_steer;
-    double potMax;
+    double kP = 1.5;
+    double kI = 0.0;
+    double kD = 0.0;
+    double potMax = 3798;
     double ang;
     double offset;
+    double sumError = 0, errorChange = 0, lastError = 0;
 
     //Constructor Run once when drive is turned on.
     public Wheel(int port, int offset) {
@@ -44,27 +48,57 @@ public class Wheel {
         //Steering Motor setup
         Steer= new TalonSRX(port);//set in port ())create talon object
         Ang=new AnalogInput(port-1);//direction pot
-        potMax = 3798;
-        kP_steer=1;
-
     }
 
     //Setter Run each time wheel is updated.
-    public void setState(double speed, double Target) {
+    public void setState(double speed, double target) {
         //PID Steering  with Talon and external pot
         ang=Ang.getValue();//analog in on the Rio
         ang=ang*360/potMax+offset+90;//Convert to compass type heading + offset
         if(ang>360){ang=ang-360;}//correct for offset overshoot.
-        double error =(Target-ang);
+        double error =(target-ang);
         if (error>180 ) {error=error-360;}//take the shortest path to correct error
         if (error<-180){error=error+360;}
         error=(error/180);//convert to 0=>1 scale
-        error= error*kP_steer;
+        error= error* kP;
         if (error>.3){error=.3;}//limit response speed. may be unnecessary
         if(error<-.3){error=-.3;}
-        Steer.set(ControlMode.PercentOutput,error );
+
+        //Custom PID loop
+        error = getModifiedError(target);
+        sumError += error * 0.02;
+        errorChange = (error-lastError)/0.02;
+        double pidOutput = error * kP + kI * sumError + kD * errorChange;
+        Steer.set(ControlMode.PercentOutput, pidOutput);
+        lastError = error;
+
         //Drive Speed with spark
         speed=speed*maxRPM;//joystick sets speed 0->1.
         pidController.setReference(speed, CANSparkMax.ControlType.kVelocity);
+    }
+
+    /**
+     *
+     * @return  the unbounded steering error, in radians
+     */
+    public double getError(double target) {
+        ang=Ang.getValue();//analog in on the Rio
+        ang=ang*360/potMax+offset+90;//Convert to compass type heading + offset
+        if(ang>360){ang=ang-360;}//correct for offset overshoot.
+        return target - ang;
+    }
+
+    /**
+     *
+     * @return  the steering error bounded to [-pi, pi]
+     */
+    public double getModifiedError(double target){
+        return (boundHalfDegrees(getError(target)))/180;
+    }
+
+    public static double boundHalfDegrees(double angle_degrees) {
+        while (angle_degrees >= 180.0) angle_degrees -= 360.0;
+        while (angle_degrees < -180.0) angle_degrees += 360.0;
+        return angle_degrees;
     }
 }
