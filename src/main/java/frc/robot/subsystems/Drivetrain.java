@@ -1,35 +1,69 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.util.DriveMode;
+import frc.robot.util.PID;
 import frc.robot.util.Wheel;
 
 @SuppressWarnings("unused")
 public class Drivetrain extends SubsystemBase {
-    private final Wheel LeftFront;
-    private final Wheel RightFront;
-    private final Wheel LeftRear;
-    private final Wheel RightRear;
-    public int mode = 1;
+    private final Wheel leftFront;
+    private final Wheel rightFront;
+    private final Wheel leftBack;
+    private final Wheel rightBack;
+    public DriveMode mode = DriveMode.SWERVE;
 
-    //steering 
-    double L = 18; //length
-    double W = 18; // Width
-    double R = Math.sqrt(L*L+W*W);
+    double W = 18; //Width of the Robot Chassis
+    double L = 18; //Length of the Robot Chassis
+
+    //The offset Angle that the front right wheel would have to adjust in order to rotate the robot counterclockwise
+    // when driving forwards (positively)
+    //Other wheels are adjusted based on this value.
+    double rotationAngle = Math.atan((L/2) / (W/2)) - 90; //TODO: implement rotating
 
     public Drivetrain(){
         //Steering
-        LeftFront  = new Wheel(1, -80);
-        RightFront = new Wheel(2, 160);
-        RightRear  = new Wheel(3,   0);
-        LeftRear   = new Wheel(4,-170);
+        PID drivePID = new PID(0.3, 0, 0, 0, 128, 1.0);
+        PID steerPID = new PID(0.3, 0, 0, 0, 128, 0.5);
+
+
+        leftFront  = new Wheel(1,  -80);
+        rightFront = new Wheel(2,  160);
+        rightBack  = new Wheel(3,    0);
+        leftBack   = new Wheel(4, -170);
+
+        //leftFront  = new SwerveModule(1, 1,  2,  3, 0, drivePID, steerPID);
+        //rightFront = new SwerveModule(2, 4,  5,  6, 0, drivePID, steerPID);
+        //rightBack  = new SwerveModule(3, 7,  8,  9, 0, drivePID, steerPID);
+        //leftBack   = new SwerveModule(4, 10,11, 12, 0, drivePID, steerPID);
     }
 
-    public void setMode(int mode) {
+    public void setMode(DriveMode mode) {
         this.mode = mode;
     }
 
+    double maxRPM = 5000;
+    double rp100ms = ((maxRPM / 60D) / 10D); //Max Revolutions per 100ms
     public void runSwerve(double XL, double YL, double XR, double YR) {
+        if (mode == DriveMode.SWERVE) {
+            //Left Joystick Angle (0 is forwards, 90 is to the right, and 180 is backwards, etc.)
+            double heading = getHeading(XL, YL);
+            double speed = Math.sqrt(XL*XL + YL*YL) / 1.41421356; //A 0-1 Value for Speed
+            double velocity = (rp100ms * speed) * 2048; //Max Revolutions * Speed Scalar * Ticks
 
+            //Update Wheels
+            //leftFront.updateModule(velocity, heading);
+            //rightFront.updateModule(velocity, heading);
+            //rightBack.updateModule(velocity, heading);
+            //leftBack.updateModule(velocity, heading);
+            leftFront.setState(velocity, heading);
+            rightFront.setState(velocity, heading);
+            rightBack.setState(velocity, heading);
+            leftBack.setState(velocity, heading);
+        }
+
+
+        /*
         //Car mode. Front wheel only steering.   Arcade control
         if (mode == 1) {
             double speed = (YR*YR);//square the speed but keep the sign so it can reverse
@@ -41,10 +75,10 @@ public class Drivetrain extends SubsystemBase {
             double TargetAng = (XR)*90;
             //TargetAng= Math.abs(TargetAng*180/3.14159+180);//convert to degrees
             //invoke Wheel
-            LeftFront.setState(speed, TargetAng);
-            RightFront.setState(speed, TargetAng);
-            RightRear.setState(speed, 0);
-            LeftRear.setState(speed, 0);
+            leftFront.setState(speed, TargetAng);
+            rightFront.setState(speed, TargetAng);
+            rightBack.setState(speed, 0);
+            leftBack.setState(speed, 0);
         }
 
         //Boat mode.  Rear steering.   Arcade control
@@ -59,10 +93,10 @@ public class Drivetrain extends SubsystemBase {
             double TargetAng = (XR)*90;
             //TargetAng= Math.abs(TargetAng*180/3.14159+180);//convert to degrees
             //invoke Wheel
-            LeftFront.setState(speed, 0);
-            RightFront.setState(speed, 0);
-            RightRear.setState(speed,-TargetAng);
-            LeftRear.setState(speed, -TargetAng);
+            leftFront.setState(speed, 0);
+            rightFront.setState(speed, 0);
+            rightBack.setState(speed,-TargetAng);
+            leftBack.setState(speed, -TargetAng);
         }
 
         //Snake mode.  Front and Rear steering.   Arcade control
@@ -79,10 +113,10 @@ public class Drivetrain extends SubsystemBase {
             double TargetAng = (XR)*90;
 
             //invoke Wheel
-            LeftFront.setState(speed, TargetAng);
-            RightFront.setState(speed, TargetAng);
-            RightRear.setState(speed, -TargetAng);
-            LeftRear.setState(speed, -TargetAng);
+            leftFront.setState(speed, TargetAng);
+            rightFront.setState(speed, TargetAng);
+            rightBack.setState(speed, -TargetAng);
+            leftBack.setState(speed, -TargetAng);
         }
 
         //Full Swerve Mode Right stick strafes left stick rotates.
@@ -126,10 +160,23 @@ public class Drivetrain extends SubsystemBase {
                 s4 = s4*sMax;
             }
             //invoke Wheel
-            LeftFront.setState(s1, tAng1);
-            RightFront.setState(s2,tAng2);
-            RightRear.setState(s3, tAng3);
-            LeftRear.setState(s4, tAng4);
+            leftFront.setState(s1, tAng1);
+            rightFront.setState(s2,tAng2);
+            rightBack.setState(s3, tAng3);
+            leftBack.setState(s4, tAng4);
         }
+        */
+    }
+
+    //I spent like half an hour figuring this out, don't try to figure it out just appreciate the results :)
+    //0 Degrees is straight forward, 90 degrees is to the right, 180 degrees is backwards, 270 degrees is to the left
+    // Aka clockwise degrees and 0 is straight forward on the joystick :)
+    private static double getHeading(double x, double y) {
+        double angle = (360 - ((Math.atan2(y, x)*180/Math.PI) + 180)) - 90;
+        if (angle < 0) {
+            angle = 270 + (90 - Math.abs(angle));
+        }
+        return angle;
     }
 }
+

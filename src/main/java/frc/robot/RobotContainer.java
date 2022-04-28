@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.commands.RunDriveMode;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.util.DriveMode;
 
 @SuppressWarnings("unused")
 public class RobotContainer {
@@ -35,14 +36,14 @@ public class RobotContainer {
                 drivetrain.runSwerve(pJoy.getRawAxis(0), pJoy.getRawAxis(1), pJoy.getRawAxis(4), pJoy.getRawAxis(5))
         ));
 
-        joyBA.whenPressed(new RunDriveMode(drivetrain, 1));
-        joyBB.whenPressed(new RunDriveMode(drivetrain, 2));
-        joyBX.whenPressed(new RunDriveMode(drivetrain, 3));
-        joyBY.whenPressed(new RunDriveMode(drivetrain, 4));
+        joyBA.whenPressed(new RunDriveMode(drivetrain, DriveMode.FO_SWERVE));
+        joyBB.whenPressed(new RunDriveMode(drivetrain, DriveMode.SWERVE));
+        joyBX.whenPressed(new RunDriveMode(drivetrain, DriveMode.CAR));
+        joyBY.whenPressed(new RunDriveMode(drivetrain, DriveMode.BOAT));
     }
 
     public void updateSmartDashboard() {
-        SmartDashboard.putNumber("Mode", drivetrain.mode);
+        SmartDashboard.putString("Mode", drivetrain.mode.getName());
     }
 
     public double powAxis(double a, double b) {
