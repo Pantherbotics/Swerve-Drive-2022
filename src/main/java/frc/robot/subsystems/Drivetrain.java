@@ -97,8 +97,8 @@ public class Drivetrain extends SubsystemBase {
             //  3 is Right Back
             //  4 is Left Back
             //To understand the vector addition look here: https://imgur.com/a/iMfg07P
-            double xr = Math.cos(rotationAngle) / 2D; //For Square Chassis at 45 degrees this is ~0.707/2D
-            double yr = Math.sin(rotationAngle) / 2D; //For Square Chassis at 45 degrees this is ~0.707/2D
+            double xr = XR * (Math.cos(rotationAngle) / 2D); //For Square Chassis at 45 degrees this is ~0.707/2D
+            double yr = XR * (Math.sin(rotationAngle) / 2D); //For Square Chassis at 45 degrees this is ~0.707/2D
             double x = getHeadingX(heading); //cos(heading) but with custom joyHeading angle format
             double y = getHeadingY(heading); //sin(heading) but with custom joyHeading angle format
             double X1 = x + xr;
