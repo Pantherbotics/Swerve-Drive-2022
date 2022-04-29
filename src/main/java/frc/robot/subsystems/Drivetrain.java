@@ -23,17 +23,18 @@ public class Drivetrain extends SubsystemBase {
 
     double W = 18; //Width of the Robot Chassis
     double L = 18; //Length of the Robot Chassis
+    double maxDriveRPM = 5000;
+    double revsPer100ms = ((maxDriveRPM / 60D) / 10D); //Max Revolutions per 100ms
 
     //The offset Angle that the front left wheel would have to adjust in order to rotate the robot clockwise
     // when driving forwards (positively)
-    //Other wheels are adjusted based on this value.
+    //This value is shifted for the other wheels automatically.
     double rotationAngle = 90 - (Math.atan((L/2) / (W/2)) * 180/Math.PI);
-    //Unsure if this should be used instead of 45 for Field-Oriented Swerve (with "front" and "back" wheels)
 
     public Drivetrain(){
         //Steering
         PID drivePID = new PID(0.3, 0, 0, 0, 128, 1.0);
-        PID steerPID = new PID(0.3, 0, 0, 0, 128, 0.5);
+        PID steerPID = new PID(0.3, 0, 0, 0, 0, 0.5);
 
         leftFront  = new Wheel(1,  -80);
         rightFront = new Wheel(2,  155);
@@ -45,7 +46,7 @@ public class Drivetrain extends SubsystemBase {
         //rightBack  = new SwerveModule(3, 7,  8,  9, 0, drivePID, steerPID);
         //leftBack   = new SwerveModule(4, 10,11, 12, 0, drivePID, steerPID);
 
-        //Zero the gyro (which doesn't set it to 0), so then have the target be the current after 100ms
+        //Zero the gyro (which doesn't set it to 0), so then have the target be the current rotation after 100ms
         zeroGyro();
         (new Timer()).schedule(new TimerTask() {
             @Override
@@ -66,13 +67,8 @@ public class Drivetrain extends SubsystemBase {
         this.targetRotation = targetRotation;
     }
 
-    double maxRPM = 5000;
-    double rp100ms = ((maxRPM / 60D) / 10D); //Max Revolutions per 100ms
     boolean justTurned = false;
     public void runSwerve(double XL, double YL, double XR, double YR) {
-        SmartDashboard.putString("DriveStickData", "XL:" + XL + " YL:" + YL + " XR:" + XR + " YR:" + YR);
-        SmartDashboard.putNumber("Left Stick Heading", getHeading(XL, YL));
-
         //Code which can be used in the future when we implement rotation stabilization
         if (Math.abs(XR) >= 0.05) {
             justTurned = true;
@@ -82,100 +78,58 @@ public class Drivetrain extends SubsystemBase {
             setTargetRotation(getGyroRot());
         }
 
-        if (mode == DriveMode.SWERVE) {
+        if (mode == DriveMode.FO_SWERVE) {
             //Left Joystick Angle (0 is forwards, 90 is to the right, and 180 is backwards, etc.)
-            double heading = getHeading(XL, YL);
-            double speed = Math.sqrt(XL*XL + YL*YL) / 1.41421356; //A 0-1 Value for Speed
-            double velocity = (rp100ms * speed) * 2048; //Max Revolutions * Speed Scalar * Ticks
+            double joyHeading = getHeading(XL, YL);
 
-            //If we aren't driving using left stick, and right stick calls for rotation, use basic still-rotation
-            if (speed <= 0.05 && Math.abs(XR) > 0.05) {
-                SmartDashboard.putBoolean("A", false);
-                //These are optimized movements to rotate the least while flipping wheel speed if needed
-                double speedScalar = 0.5; //Either -1 or 1, 1 represents clockwise and -1 represents counterclockwise for adjusting wheel dir.
-                leftFront.setState(XR*speedScalar, rotationAngle);
-                rightFront.setState(-XR*speedScalar, 360-rotationAngle);
-                rightBack.setState(-XR*speedScalar, rotationAngle);
-                leftBack.setState(XR*speedScalar, 360-rotationAngle);
-            }else {
-                //TODO add rotation stabilization
-                //These two variables are for the wheel rotation adjustment for spinning while driving (stabilized rotation)
-                double rotTargetError = targetRotation - getGyroRot(); //Should be +-[0, 360)
-                double deltaTargetRot2 = rotTargetError / 8D; //Should be +-[0, 45)
-                SmartDashboard.putNumber("Rotation Target Error", rotTargetError);
-                SmartDashboard.putNumber("Delta Target Rot", deltaTargetRot2);
+            //TODO add rotation stabilization
+            //These two variables are for the wheel rotation adjustment for spinning while driving (stabilized rotation)
+            double rotTargetError = targetRotation - getGyroRot(); //Should be +-[0, 360)
+            double deltaTargetRot2 = rotTargetError / 8D; //Should be +-[0, 45)
+            SmartDashboard.putNumber("Rotation Target Error", rotTargetError);
+            SmartDashboard.putNumber("Delta Target Rot", deltaTargetRot2);
 
-                double deltaTargetRot = XR * 45D; //Should be +-[0, 45)
+            //This variable is for wheel joyHeading (Field-Oriented) if we are driving straight (no turning)
+            double rotFromInitial = initialRotation - getGyroRot(); //Should be +-[0, 360)
+            double heading = joyHeading + rotFromInitial;
 
-                //1 is LF, 2 is RF, 3 is RB, 4 is LF (wheel ids for vectors)
-                double rotationComponent = XR * 0.5;
+            //Wheel Mappings for Vector Variable Names:
+            //  1 is Left Front
+            //  2 is Right Front
+            //  3 is Right Back
+            //  4 is Left Back
+            //To understand the vector addition look here: https://imgur.com/a/iMfg07P
+            double xr = Math.cos(rotationAngle) / 2D; //For Square Chassis at 45 degrees this is ~0.707/2D
+            double yr = Math.sin(rotationAngle) / 2D; //For Square Chassis at 45 degrees this is ~0.707/2D
+            double x = getHeadingX(heading); //cos(heading) but with custom joyHeading angle format
+            double y = getHeadingY(heading); //sin(heading) but with custom joyHeading angle format
+            double X1 = x + xr;
+            double Y1 = y + yr;
+            double X2 = x + xr;
+            double Y2 = y - yr;
+            double X3 = x - xr;
+            double Y3 = y - yr;
+            double X4 = x - xr;
+            double Y4 = y + yr;
 
+            double speedMax = Math.sqrt(xr*xr + (1+yr)*(1+yr)); //The largest possible speed from vectors
+            leftFront.setState(Math.sqrt(X1*X1+Y1*Y1)/speedMax, getHeading(X1, Y1));
+            rightFront.setState(Math.sqrt(X2*X2+Y2*Y2)/speedMax, getHeading(X2, Y2));
+            rightBack.setState(Math.sqrt(X3*X3+Y3*Y3)/speedMax, getHeading(X3, Y3));
+            leftBack.setState(Math.sqrt(X4*X4+Y4*Y4)/speedMax, getHeading(X4, Y4));
 
-                double sin = (Math.sin(heading - getGyroRot()) * 180 / Math.PI) * speed;
-                double cos = (Math.cos(heading - getGyroRot()) * 180 / Math.PI) * speed;
-                double X1 = sin + rotationComponent;
-                double Y1 = cos + rotationComponent;
-                double X2 = sin + rotationComponent;
-                double Y2 = cos - rotationComponent;
-                double X3 = sin - rotationComponent;
-                double Y3 = cos - rotationComponent;
-                double X4 = sin - rotationComponent;
-                double Y4 = cos + rotationComponent;
-
-                getHeading(X1, Y1);
-                double speedScale = Math.sqrt(rotationComponent*rotationComponent + (1+rotationComponent)*(1+rotationComponent));
-                leftFront.setState(Math.sqrt(X1*X1+Y1*Y1)/speedScale, getHeading(X1, Y1));
-                rightFront.setState(Math.sqrt(X2*X2+Y2*Y2)/speedScale, getHeading(X2, Y2));
-                rightBack.setState(Math.sqrt(X3*X3+Y3*Y3)/speedScale, getHeading(X3, Y3));
-                leftBack.setState(Math.sqrt(X4*X4+Y4*Y4)/speedScale, getHeading(X4, Y4));
-
-
-
-                //This variable is for wheel heading (Field-Oriented) if we are driving straight (no turning)
-                double rotFromInitial = initialRotation - getGyroRot(); //Should be +-[0, 360)
-
-                double hLF = 0, hLB = 0, hRF = 0, hRB = 0; //Rotate Adjustments for each wheel (Left Forward, Left Back, etc)
-                if (Math.abs(rotFromInitial) <= 45 || Math.abs(rotFromInitial) > 315) { //+-45 the front two are the "front", and +->315 are the "front"
-                    hLF = deltaTargetRot; hRF = deltaTargetRot;
-                    hLB = -deltaTargetRot; hRB = -deltaTargetRot;
-                }else if (rotFromInitial >= 45 && rotFromInitial <= 135) { //Between 45 and 135 the left two are the "front"
-                    hLF = deltaTargetRot; hLB = deltaTargetRot;
-                    hRF = -deltaTargetRot; hRB = -deltaTargetRot;
-                }else if (rotFromInitial >= 135 && rotFromInitial <= 225) { //Between 135 and 225 the back two are the "front"
-                    hLB = deltaTargetRot; hRB = deltaTargetRot;
-                    hLF = -deltaTargetRot; hRF = -deltaTargetRot;
-                }else if (rotFromInitial >= 225 && rotFromInitial < 315) { //Between 225 and 315 the right two are the "front"
-                    hRF = deltaTargetRot; hRB = deltaTargetRot;
-                    hLF = -deltaTargetRot; hLB = -deltaTargetRot;
-                }else if (rotFromInitial <= -45 && rotFromInitial >= -135) { //Between -45 and -135 the right two are the "front"
-                    hLF = -deltaTargetRot; hLB = -deltaTargetRot;
-                    hRF = deltaTargetRot; hRB = deltaTargetRot;
-                }else if (rotFromInitial <= -135 && rotFromInitial >= -225) { //Between -135 and -225 the back two are the "front"
-                    hLB = -deltaTargetRot; hRB = -deltaTargetRot;
-                    hLF = deltaTargetRot; hRF = deltaTargetRot;
-                }else if (rotFromInitial <= -225 && rotFromInitial >= -315) { //Between -225 and -315 the left two are the "front"
-                    hLF = deltaTargetRot; hLB = deltaTargetRot;
-                    hRF = -deltaTargetRot; hRB = -deltaTargetRot;
-                }
-
-                //Update Wheels
-                //leftFront.updateModule(velocity, rotFromInitial + hLF);
-                //rightFront.updateModule(velocity, rotFromInitial + hRF);
-                //rightBack.updateModule(velocity, rotFromInitial + hRB);
-                //leftBack.updateModule(velocity, rotFromInitial + hLB);
-
-                //leftFront.setState(speed, rotFromInitial + heading + hLF);
-                //rightFront.setState(speed, rotFromInitial + heading + hRF);
-                //rightBack.setState(speed, rotFromInitial + heading + hRB);
-                //leftBack.setState(speed, rotFromInitial + heading + hLB);
-            }
-
+            //Update Wheels
+            //double velFactor = revsPer100ms * 2048; //Converts [-1,1] to Falcon500 velocity in ticks/100ms
+            //leftFront.updateModule((Math.sqrt(X1*X1+Y1*Y1)/speedMax) * velFactor, getHeading(X1, Y1));
+            //rightFront.updateModule((Math.sqrt(X2*X2+Y2*Y2)/speedMax) * velFactor, getHeading(X2, Y2));
+            //rightBack.updateModule((Math.sqrt(X3*X3+Y3*Y3)/speedMax) * velFactor, getHeading(X3, Y3));
+            //leftBack.updateModule((Math.sqrt(X4*X4+Y4*Y4)/speedMax) * velFactor, getHeading(X4, Y4));
         }
 
+        //TODO add Regular SWERVE and GS_SWERVE modes after completing FO_SWERVE
 
-        /*
         //Car mode. Front wheel only steering.   Arcade control
-        if (mode == 1) {
+        if (mode == DriveMode.CAR) {
             double speed = (YR*YR);//square the speed but keep the sign so it can reverse
             if(YR < 0){ speed = -speed; }
             if (speed > 1){ speed = 1; }
@@ -192,7 +146,7 @@ public class Drivetrain extends SubsystemBase {
         }
 
         //Boat mode.  Rear steering.   Arcade control
-        if (mode == 2) {
+        if (mode == DriveMode.BOAT) {
             //Right stick speed
             double speed = (YR*YR);//square the speed but keep the sign so it can reverse
             if(YR < 0){ speed = -speed; }
@@ -208,85 +162,48 @@ public class Drivetrain extends SubsystemBase {
             rightBack.setState(speed,-TargetAng);
             leftBack.setState(speed, -TargetAng);
         }
-
-        //Snake mode.  Front and Rear steering.   Arcade control
-        if (mode==3) {
-            //Right stick speed
-            double speed = (YR*YR);//square the speed but keep the sign so it can reverse
-            if (YR < 0) { speed = -speed; }
-            if (speed > 1) { speed = 1; }
-            if (speed < -1) { speed = -1; }
-
-            //Calculate Steering Angle
-            if (XR < 0) { XR = -XR*XR; }
-            else{ XR = XR*XR; }
-            double TargetAng = (XR)*90;
-
-            //invoke Wheel
-            leftFront.setState(speed, TargetAng);
-            rightFront.setState(speed, TargetAng);
-            rightBack.setState(speed, -TargetAng);
-            leftBack.setState(speed, -TargetAng);
-        }
-
-        //Full Swerve Mode Right stick strafes left stick rotates.
-        if (mode == 4) {
-            //define the rotation vector.
-            double rotX = XL/1.41; //R/sqrt2
-            double rotY = XL/1.41;
-
-            //calculate base vectors
-            double X1 = XR+rotX;//left Front
-            double Y1 = YR+rotY;
-            double tAng1 = -Math.atan2(Y1,X1)*180/Math.PI+90;
-            double X2 = XR+rotX;//Right Front
-            double Y2 = YR-rotY;
-            double tAng2 = -Math.atan2(Y2,X2)*180/Math.PI+90;
-            double X3 = XR-rotX;//Right Rear
-            double Y3 = YR-rotY;
-            double tAng3 = -Math.atan2(Y3,X3)*180/Math.PI+90;
-            double X4 = XR-rotX;//Left Rear
-            double Y4 = YR+rotX;
-            double tAng4 = -Math.atan2(Y4,X4)*180/Math.PI+90;
-            //Calculate speeds
-            double s1 = Math.sqrt(X1*X1+Y1*Y1);
-            double s2 = Math.sqrt(X2*X2+Y2*Y2);
-            double s3 = Math.sqrt(X3*X3+Y3*Y3);
-            double s4 = Math.sqrt(X4*X4+Y4*Y4);
-            //Check to see if max speed is <1
-            double sMax = Math.max(s1,s2);
-            sMax = Math.max(sMax,s3);
-            sMax = Math.max(sMax,s4);
-
-            if(sMax > 1) {
-                s1 = s1/sMax;
-                s2 = s2/sMax;
-                s3 = s3/sMax;
-                s4 = s4/sMax;
-            } else{ //rescale to the square of the largest speed.
-                s1 = s1*sMax;
-                s2 = s2*sMax;
-                s3 = s3*sMax;
-                s4 = s4*sMax;
-            }
-            //invoke Wheel
-            leftFront.setState(s1, tAng1);
-            rightFront.setState(s2,tAng2);
-            rightBack.setState(s3, tAng3);
-            leftBack.setState(s4, tAng4);
-        }
-        */
     }
 
     //I spent like half an hour figuring this out, don't try to figure it out just appreciate the results :)
     //0 Degrees is straight forward, 90 degrees is to the right, 180 degrees is backwards, 270 degrees is to the left
     // Aka clockwise degrees and 0 is straight forward on the joystick :)
-    private static double getHeading(double x, double y) {
+    private double getHeading(double x, double y) {
         double angle = (360 - ((Math.atan2(y, x)*180/Math.PI) + 180)) - 90;
         if (angle < 0) {
             angle = 270 + (90 - Math.abs(angle));
         }
         return angle;
+    }
+
+    //Used to re-obtain the X value from an angle using the custom getHeading()
+    private double getHeadingX(double angle) {
+        //Ensure values are [0, 360)
+        while (angle > 360) { angle -= 360; }
+        while (angle < 0) { angle += 360; }
+
+        if (angle >= 0 && angle <= 90) {
+            return Math.cos(Math.toRadians(90 - angle));
+        }else if (angle >= 90 && angle <= 270) {
+            return Math.cos(-Math.toRadians(angle - 90));
+        }else if (angle >= 270 && angle <= 360) {
+            return -Math.cos(Math.toRadians(270 - angle));
+        }
+        return 0;
+    }
+    //Used to re-obtain the Y value from an angle using the custom getHeading()
+    private double getHeadingY(double angle) {
+        //Ensure values are [0, 360)
+        while (angle > 360) { angle -= 360; }
+        while (angle < 0) { angle += 360; }
+
+        if (angle >= 0 && angle <= 90) {
+            return Math.sin(Math.toRadians(90 - angle));
+        }else if (angle >= 90 && angle <= 270) {
+            return Math.sin(-Math.toRadians(angle - 90));
+        }else if (angle >= 270 && angle <= 360) {
+            return -Math.sin(Math.toRadians(270 - angle));
+        }
+        return 0;
     }
 
     //Gyroscope
