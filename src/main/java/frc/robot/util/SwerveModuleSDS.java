@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
-@SuppressWarnings({"unused", "FieldCanBeLocal"})
+@SuppressWarnings("unused")
 public class SwerveModuleSDS {
     //Motors & Encoders
     private final WPI_TalonFX steer;
@@ -16,12 +16,10 @@ public class SwerveModuleSDS {
     private final CANCoder encoder;
 
     //Swerve Module Variables
-    private final int id;
     private final double angleOffset;
 
     //Constructor Run once when drive is turned on.
     public SwerveModuleSDS(int id, int steerID, int driveID, int canCoderID, double angleOffset, PID drivePID, PID steerPID) {
-        this.id = id;
         this.angleOffset = angleOffset;
         steer = PID.setupFalcon(steerID, false, steerPID, 0, 30);
         drive = PID.setupFalcon(driveID, false, drivePID, 0, 30);
@@ -35,19 +33,29 @@ public class SwerveModuleSDS {
     /**
         * Setter Run each time wheel is updated.
         * @param velocity: target speed of the wheel in native ticks per 100ms
-        * @param angle: target angle of the wheel in degrees < In the range [0, 360) >
+        * @param angle: target angle of the wheel in degrees (handles any angle, >360, <0)
         */
     //This may require edge case handling but for now I believe it will work (given inputs are in range)
-    //TODO: make sure that going from say 0 to 270 will rotate -90 rather than going +270
-    //TODO: handle inputs outside of range
     public void updateModule(double velocity, double angle) {
+        //Normalize the angle to [0, 360)
+        while (angle > 360) { angle -= 360; }
+        while (angle < 0) { angle += 360; }
+
         double currAngle = getAngle();
-        double error = angle - currAngle;
+        double error = getShortestError(angle, currAngle);
         double deltaSteerPos = error * Constants.angleGearRatio * 2048;
         steer.set(ControlMode.Position, steer.getSelectedSensorPosition() + deltaSteerPos);
+        drive.set(ControlMode.Velocity, velocity);
     }
 
     private double getAngle() {
         return encoder.getAbsolutePosition() + angleOffset; //Conveniently returns angle in degrees [0, 360)
+    }
+
+    private double getShortestError(double target, double current) {
+        double error = target - current;
+        if (error > 180) { error -= 360; }
+        else if (error < -180) { error += 360; }
+        return error;
     }
 }
