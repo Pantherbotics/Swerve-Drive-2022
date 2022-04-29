@@ -109,7 +109,6 @@ public class Drivetrain extends SubsystemBase {
             double Y3 = y - yr;
             double X4 = x - xr;
             double Y4 = y + yr;
-            //test
 
             double speedMax = Math.sqrt(xr*xr + (1+yr)*(1+yr)); //The largest possible speed from vectors
             leftFront.setState(Math.sqrt(X1*X1+Y1*Y1)/speedMax, getHeading(X1, Y1));
