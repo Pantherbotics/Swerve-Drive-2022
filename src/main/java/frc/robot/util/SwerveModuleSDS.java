@@ -55,10 +55,12 @@ public class SwerveModuleSDS extends SwerveModule {
     }
 
     private double getAngle() {
-        return encoder.getAbsolutePosition() + angleOffset; //Conveniently returns angle in degrees [0, 360)
+        //Conveniently returns angle in degrees [0, 360)
+        return encoder.getAbsolutePosition() + angleOffset;
     }
 
     private double getShortestError(double target, double current) {
+        //target and current are [0, 360) so one addition/subtraction is sufficient
         double error = target - current;
         if (error > 180) { error -= 360; }
         else if (error < -180) { error += 360; }
