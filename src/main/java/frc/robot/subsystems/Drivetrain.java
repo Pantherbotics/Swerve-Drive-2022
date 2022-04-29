@@ -1,11 +1,11 @@
 package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
+import com.pantherbotics.libraries.PID;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.DriveMode;
-import frc.robot.util.PID;
 import frc.robot.util.Wheel;
 
 import java.util.Timer;
