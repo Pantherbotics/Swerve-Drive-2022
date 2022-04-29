@@ -13,18 +13,16 @@ import java.util.TimerTask;
 
 @SuppressWarnings("unused")
 public class Drivetrain extends SubsystemBase {
-    private final Wheel leftFront;
-    private final Wheel rightFront;
-    private final Wheel leftBack;
-    private final Wheel rightBack;
+    public final Wheel leftFront;
+    public final Wheel rightFront;
+    public final Wheel leftBack;
+    public final Wheel rightBack;
     public DriveMode mode = DriveMode.SWERVE;
 
     private final AHRS gyro = new AHRS(I2C.Port.kOnboard);
 
     double W = 18; //Width of the Robot Chassis
     double L = 18; //Length of the Robot Chassis
-    double maxDriveRPM = 5000;
-    double revsPer100ms = ((maxDriveRPM / 60D) / 10D); //Max Revolutions per 100ms
 
     //The offset Angle that the front left wheel would have to adjust in order to rotate the robot clockwise
     // when driving forwards (positively)
@@ -119,11 +117,10 @@ public class Drivetrain extends SubsystemBase {
             leftBack.setState(Math.sqrt(X4*X4+Y4*Y4)/speedMax, getHeading(X4, Y4));
 
             //Update Wheels
-            //double velFactor = revsPer100ms * 2048; //Converts [-1,1] to Falcon500 velocity in ticks/100ms
-            //leftFront.updateModule((Math.sqrt(X1*X1+Y1*Y1)/speedMax) * velFactor, getHeading(X1, Y1));
-            //rightFront.updateModule((Math.sqrt(X2*X2+Y2*Y2)/speedMax) * velFactor, getHeading(X2, Y2));
-            //rightBack.updateModule((Math.sqrt(X3*X3+Y3*Y3)/speedMax) * velFactor, getHeading(X3, Y3));
-            //leftBack.updateModule((Math.sqrt(X4*X4+Y4*Y4)/speedMax) * velFactor, getHeading(X4, Y4));
+            //leftFront.updateModule((Math.sqrt(X1*X1+Y1*Y1)/speedMax), getHeading(X1, Y1));
+            //rightFront.updateModule((Math.sqrt(X2*X2+Y2*Y2)/speedMax), getHeading(X2, Y2));
+            //rightBack.updateModule((Math.sqrt(X3*X3+Y3*Y3)/speedMax), getHeading(X3, Y3));
+            //leftBack.updateModule((Math.sqrt(X4*X4+Y4*Y4)/speedMax), getHeading(X4, Y4));
         }
 
         //TODO add Regular SWERVE and GS_SWERVE modes after completing FO_SWERVE

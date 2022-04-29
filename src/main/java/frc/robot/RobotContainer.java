@@ -5,7 +5,9 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.robot.commands.RunDriveMode;
+import frc.robot.commands.RunTestModule;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.util.DriveMode;
 
@@ -16,10 +18,14 @@ public class RobotContainer {
 
     //Joysticks
     private final XboxController pJoy = new XboxController(Constants.pJoyID);
-    private final JoystickButton joyBA = new JoystickButton(pJoy, 1);
-    private final JoystickButton joyBB = new JoystickButton(pJoy, 2);
-    private final JoystickButton joyBX = new JoystickButton(pJoy, 3);
-    private final JoystickButton joyBY = new JoystickButton(pJoy, 4);
+    private final JoystickButton joyBA = new JoystickButton(pJoy, 1); //Button A
+    private final JoystickButton joyBB = new JoystickButton(pJoy, 2); //Button B
+    private final JoystickButton joyBX = new JoystickButton(pJoy, 3); //Button X
+    private final JoystickButton joyBY = new JoystickButton(pJoy, 4); //Button Y
+    private final POVButton sJoyPOVN = new POVButton(pJoy, 0);   //POV North
+    private final POVButton sJoyPOVS = new POVButton(pJoy, 180); //POV South
+    private final POVButton sJoyPOVW = new POVButton(pJoy, 270); //POV West
+    private final POVButton sJoyPOVE = new POVButton(pJoy, 90);  //POV East
 
     public RobotContainer() {
         configureButtonBindings();
@@ -40,6 +46,12 @@ public class RobotContainer {
         joyBB.whenPressed(new RunDriveMode(drivetrain, DriveMode.SWERVE));
         joyBX.whenPressed(new RunDriveMode(drivetrain, DriveMode.CAR));
         joyBY.whenPressed(new RunDriveMode(drivetrain, DriveMode.BOAT));
+
+        //Test buttons
+        sJoyPOVN.whileHeld(new RunTestModule(drivetrain.leftFront));
+        sJoyPOVE.whileHeld(new RunTestModule(drivetrain.rightFront));
+        sJoyPOVS.whileHeld(new RunTestModule(drivetrain.rightBack));
+        sJoyPOVW.whileHeld(new RunTestModule(drivetrain.leftBack));
     }
 
     public void updateSmartDashboard() {
