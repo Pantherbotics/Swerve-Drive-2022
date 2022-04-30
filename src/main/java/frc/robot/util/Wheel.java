@@ -46,6 +46,11 @@ public class Wheel extends SwerveModule{
         //Steering Motor setup
         steer = new TalonSRX(port);//set in port ())create talon object
         analogInput = new AnalogInput(port-1);//direction pot
+
+        //CRITICAL: Once the CANcoders arrive, we can use the following methods to use them as sensors
+        // Inside the TalonSRX for it's PID loops
+        //steer.configRemoteFeedbackFilter(new CANCoder(0), 0);
+        //steer.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0, 0, 0);
     }
 
     //Setter Run each time wheel is updated.
