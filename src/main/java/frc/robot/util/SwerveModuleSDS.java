@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
@@ -31,6 +32,12 @@ public class SwerveModuleSDS extends SwerveModule {
 
         //Run Every 100ms to update the Dashboard
         new Notifier(() -> SmartDashboard.putNumber("SwerveModule" + id + " Angle", getAngle())).startPeriodic(100D/1000D);
+
+
+        //CRITICAL: We can either calculate and use the position PID inside the Falcon500, or use
+        // data from the CANCoder, supplied to the steer motor TalonFX.
+        //steer.configRemoteFeedbackFilter(new CANCoder(0), 0);
+        //steer.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0, 0, 0);
     }
 
     private double steerTarget = 0;
