@@ -17,15 +17,17 @@ public class Wheel extends SwerveModule{
 
     //Variable declarations
     double maxRPM = 4000;
-    double kP = 1.5;
-    double kI = 0.0;
-    double kD = 0.0;
+    double kP;
+    double kI;
+    double kD;
     double potMax = 3798;
     double sumError = 0, errorChange = 0, lastError = 0;
     double offset;
 
     //Constructor Run once when drive is turned on.
-    public Wheel(int port, int offset) {
+    public Wheel(int port, int offset, PID pid) {
+        kP = pid.kP; kI = pid.kI; kD = pid.kD;
+
         this.offset= offset;
         //Drive motor
         //Class Declarations

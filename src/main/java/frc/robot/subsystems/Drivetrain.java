@@ -1,11 +1,11 @@
 package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
-import com.pantherbotics.libraries.PID;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.DriveMode;
+import frc.robot.util.PID;
 import frc.robot.util.Wheel;
 
 import java.util.Timer;
@@ -17,10 +17,11 @@ public class Drivetrain extends SubsystemBase {
     public final Wheel rightFront;
     public final Wheel leftBack;
     public final Wheel rightBack;
-    public DriveMode mode = DriveMode.SWERVE;
+    public DriveMode mode = DriveMode.FO_SWERVE;
 
     private final AHRS gyro = new AHRS(I2C.Port.kOnboard);
 
+    double debounce = 0.08; //Joystick debounce if sticks don't rest at 0
     double W = 18; //Width of the Robot Chassis
     double L = 18; //Length of the Robot Chassis
 
@@ -34,10 +35,10 @@ public class Drivetrain extends SubsystemBase {
         PID drivePID = new PID(0.3, 0, 0, 0, 128, 1.0);
         PID steerPID = new PID(0.3, 0, 0, 0, 0, 0.5);
 
-        leftFront  = new Wheel(1,  -80);
-        rightFront = new Wheel(2,  155);
-        rightBack  = new Wheel(3,    0);
-        leftBack   = new Wheel(4, -160);
+        leftFront  = new Wheel(1,  -80, new PID(0.75, 0, 0));
+        rightFront = new Wheel(2,  155, new PID(0.75, 0, 0));
+        rightBack  = new Wheel(3,    0, new PID(0.75, 0, 0));
+        leftBack   = new Wheel(4, -160, new PID(0.75, 0, 0));
 
         //leftFront  = new SwerveModule(1, 1,  2,  3, 0, drivePID, steerPID);
         //rightFront = new SwerveModule(2, 4,  5,  6, 0, drivePID, steerPID);
@@ -49,8 +50,9 @@ public class Drivetrain extends SubsystemBase {
         (new Timer()).schedule(new TimerTask() {
             @Override
             public void run() {
-                setTargetRotation(getGyroRot());
-                initialRotation = getGyroRot();
+                double initial = getGyroRot();
+                setTargetRotation(initial);
+                initialRotation = initial;
             }
         }, 100);
     }
@@ -59,16 +61,22 @@ public class Drivetrain extends SubsystemBase {
         this.mode = mode;
     }
 
-    private double targetRotation = 0;
-    private double initialRotation = 0;
+    public double targetRotation = 0;
+    public double initialRotation = 0;
     public void setTargetRotation(double targetRotation) {
         this.targetRotation = targetRotation;
     }
 
     boolean justTurned = false;
     public void runSwerve(double XL, double YL, double XR, double YR) {
+        //Add small debounces
+        XL = (Math.abs(XL) <= debounce) ? 0 : XL; YL = (Math.abs(YL) <= debounce) ? 0 : YL;
+        XR = (Math.abs(XR) <= debounce) ? 0 : XR; YR = (Math.abs(YR) <= debounce) ? 0 : YR;
+
+        SmartDashboard.putString("Data0", "XL: " + XL + " YL: " + YL + " XR: " + XR + " YR: " + YR);
+
         //Code which can be used in the future when we implement rotation stabilization
-        if (Math.abs(XR) >= 0.05) {
+        if (Math.abs(XR) >= debounce) {
             justTurned = true;
             targetRotation += XR;
         }else if (justTurned) {
@@ -79,13 +87,12 @@ public class Drivetrain extends SubsystemBase {
         if (mode == DriveMode.FO_SWERVE) {
             //Left Joystick Angle (0 is forwards, 90 is to the right, and 180 is backwards, etc.)
             double joyHeading = getHeading(XL, YL);
+            SmartDashboard.putNumber("Heading", joyHeading);
+            double speed = (Math.sqrt(XL*XL + YL*YL)) / 1.41421356; // [-1, 1] of the speed of the left joystick
 
-            //TODO add rotation stabilization
             //These two variables are for the wheel rotation adjustment for spinning while driving (stabilized rotation)
             double rotTargetError = targetRotation - getGyroRot(); //Should be +-[0, 360)
-            double deltaTargetRot2 = rotTargetError / 8D; //Should be +-[0, 45)
-            SmartDashboard.putNumber("Rotation Target Error", rotTargetError);
-            SmartDashboard.putNumber("Delta Target Rot", deltaTargetRot2);
+            double deltaTargetRot = rotTargetError / 8D; //Should be +-[0, 45)
 
             //This variable is for wheel joyHeading (Field-Oriented) if we are driving straight (no turning)
             double rotFromInitial = initialRotation - getGyroRot(); //Should be +-[0, 360)
@@ -99,16 +106,23 @@ public class Drivetrain extends SubsystemBase {
             //To understand the vector addition look here: https://imgur.com/a/iMfg07P
             double xr = XR * (Math.cos(rotationAngle) / 2D); //For Square Chassis at 45 degrees this is ~0.707/2D
             double yr = XR * (Math.sin(rotationAngle) / 2D); //For Square Chassis at 45 degrees this is ~0.707/2D
+
+            //Rotation Stabilization (NOT WORKING)
+            //double xr = (Math.abs(deltaTargetRot)/22.5) * (Math.cos(Math.abs(deltaTargetRot)) / 2D); //For Square Chassis at 45 degrees this is ~0.707/2D
+            //double yr = (Math.abs(deltaTargetRot)/22.5) * (Math.sin(Math.abs(deltaTargetRot)) / 2D); //For Square Chassis at 45 degrees this is ~0.707/2D
+
             double x = getHeadingX(heading); //cos(heading) but with custom joyHeading angle format
             double y = getHeadingY(heading); //sin(heading) but with custom joyHeading angle format
-            double X1 = x + xr;
-            double Y1 = y + yr;
-            double X2 = x + xr;
-            double Y2 = y - yr;
-            double X3 = x - xr;
-            double Y3 = y - yr;
-            double X4 = x - xr;
-            double Y4 = y + yr;
+            double X1 = x*speed + xr;
+            double Y1 = y*speed + yr;
+            double X2 = x*speed + xr;
+            double Y2 = y*speed - yr;
+            double X3 = x*speed - xr;
+            double Y3 = y*speed - yr;
+            double X4 = x*speed - xr;
+            double Y4 = y*speed + yr;
+            SmartDashboard.putString("Data", "X: " + x + " Y: " + y);
+            SmartDashboard.putString("Data2", "RX: " + xr + " RY: " + yr);
 
             double speedMax = Math.sqrt(xr*xr + (1+yr)*(1+yr)); //The largest possible speed from vectors
             leftFront.setState(Math.sqrt(X1*X1+Y1*Y1)/speedMax, getHeading(X1, Y1));
@@ -165,6 +179,8 @@ public class Drivetrain extends SubsystemBase {
     //0 Degrees is straight forward, 90 degrees is to the right, 180 degrees is backwards, 270 degrees is to the left
     // Aka clockwise degrees and 0 is straight forward on the joystick :)
     private double getHeading(double x, double y) {
+        if (x == 0 && y == 0) { return 0; }
+
         double angle = (360 - ((Math.atan2(y, x)*180/Math.PI) + 180)) - 90;
         if (angle < 0) {
             angle = 270 + (90 - Math.abs(angle));

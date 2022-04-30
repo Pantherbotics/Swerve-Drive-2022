@@ -86,8 +86,10 @@ deployArtifact.jarTask = jar
 wpi.java.configureExecutableTasks(jar)
 wpi.java.configureTestTasks(test)
 
+/*
 git {
     implementation 'https://github.com/Pantherbotics/Pantherbotics-Libraries.git', {
         commit '9b23110'
     }
 }
+*/
