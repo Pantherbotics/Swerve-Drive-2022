@@ -6,6 +6,7 @@ import frc.robot.util.SwerveModule;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class RunTestModule extends CommandBase {
     private final SwerveModule module;
     private final List<Double> angles = new ArrayList<>();

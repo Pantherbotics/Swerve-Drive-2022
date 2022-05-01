@@ -1,15 +1,28 @@
 package frc.robot;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
-import frc.robot.commands.RunDriveMode;
-import frc.robot.commands.RunTestModule;
+import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.OIConstants;
+import frc.robot.commands.RunSwerveJoystick;
 import frc.robot.subsystems.Drivetrain;
-import frc.robot.util.DriveMode;
+
+import java.util.List;
 
 @SuppressWarnings("unused")
 public class RobotContainer {
@@ -28,6 +41,13 @@ public class RobotContainer {
     private final POVButton sJoyPOVE = new POVButton(pJoy, 90);  //POV East
 
     public RobotContainer() {
+        drivetrain.setDefaultCommand(new RunSwerveJoystick(
+                drivetrain,
+                () -> -pJoy.getRawAxis(OIConstants.kDriverYAxis),
+                () -> pJoy.getRawAxis(OIConstants.kDriverXAxis),
+                () -> pJoy.getRawAxis(OIConstants.kDriverRotAxis),
+                () -> !pJoy.getRawButton(OIConstants.kDriverFieldOrientedButtonIdx)));
+
         configureButtonBindings();
     }
 
@@ -38,23 +58,54 @@ public class RobotContainer {
      * passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
-        drivetrain.setDefaultCommand(new RunCommand(() ->
-                drivetrain.runSwerve(pJoy.getRawAxis(0), -pJoy.getRawAxis(1), pJoy.getRawAxis(4), -pJoy.getRawAxis(5)), drivetrain
-        ));
-
-        joyBA.whenPressed(new RunDriveMode(drivetrain, DriveMode.FO_SWERVE));
-        joyBB.whenPressed(new RunDriveMode(drivetrain, DriveMode.SWERVE));
-        joyBX.whenPressed(new RunDriveMode(drivetrain, DriveMode.CAR));
-        joyBY.whenPressed(new RunDriveMode(drivetrain, DriveMode.BOAT));
-
-        //Test buttons
-        sJoyPOVN.whileHeld(new RunTestModule(drivetrain.leftFront));
-        sJoyPOVE.whileHeld(new RunTestModule(drivetrain.rightFront));
-        sJoyPOVS.whileHeld(new RunTestModule(drivetrain.rightBack));
-        sJoyPOVW.whileHeld(new RunTestModule(drivetrain.leftBack));
+        new JoystickButton(pJoy, 2).whenPressed(drivetrain::zeroHeading);
     }
 
+    public Command getAutonomousCommand() {
+        // 1. Create trajectory settings
+        TrajectoryConfig trajectoryConfig = new TrajectoryConfig(
+                AutoConstants.kMaxSpeedMetersPerSecond,
+                AutoConstants.kMaxAccelerationMetersPerSecondSquared)
+                .setKinematics(DriveConstants.kDriveKinematics);
+
+        // 2. Generate trajectory
+        Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
+                new Pose2d(0, 0, new Rotation2d(0)),
+                List.of(
+                        new Translation2d(1, 0),
+                        new Translation2d(1, -1)),
+                new Pose2d(2, -1, Rotation2d.fromDegrees(180)),
+                trajectoryConfig);
+
+        // 3. Define PID controllers for tracking trajectory
+        PIDController xController = new PIDController(AutoConstants.kPXController, 0, 0);
+        PIDController yController = new PIDController(AutoConstants.kPYController, 0, 0);
+        ProfiledPIDController thetaController = new ProfiledPIDController(
+                AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
+        thetaController.enableContinuousInput(-Math.PI, Math.PI);
+
+        // 4. Construct command to follow trajectory
+        SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
+                trajectory,
+                drivetrain::getPose,
+                DriveConstants.kDriveKinematics,
+                xController,
+                yController,
+                thetaController,
+                drivetrain::setModuleStates,
+                drivetrain
+        );
+
+        // 5. Add some init and wrap-up, and return everything
+        return new SequentialCommandGroup(
+                new InstantCommand(() -> drivetrain.resetOdometry(trajectory.getInitialPose())),
+                swerveControllerCommand,
+                new InstantCommand(drivetrain::stopModules));
+    }
+
+
     public void updateSmartDashboard() {
+        /*
         SmartDashboard.putString("Mode", drivetrain.mode.getName());
 
         SmartDashboard.putNumber("InitGyro", drivetrain.initialRotation);
@@ -65,17 +116,6 @@ public class RobotContainer {
         double deltaTargetRot = rotTargetError / 8D;
         SmartDashboard.putNumber("Rotation Target Error", rotTargetError);
         SmartDashboard.putNumber("Delta Target Rot", deltaTargetRot);
+        */
     }
-
-    public double powAxis(double a, double b) {
-        if (a >= 0) {
-            return Math.pow(a, b);
-        }else {
-            return -Math.pow(-a, b);
-        }
-    }
-
-    public void init() {}
-
-    public void whenDisabled() {}
 }
