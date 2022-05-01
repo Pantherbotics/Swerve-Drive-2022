@@ -6,6 +6,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.RobotController;
 
 @SuppressWarnings("unused")
 public class Wheel extends SwerveModule{
@@ -51,6 +52,10 @@ public class Wheel extends SwerveModule{
         // Inside the TalonSRX for it's PID loops
         //steer.configRemoteFeedbackFilter(new CANCoder(0), 0);
         //steer.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0, 0, 0);
+
+        // This class is what I've been searching for...
+        // RobotController.getBatteryVoltage();
+        // RobotController.getVoltage5V();
     }
 
     //Setter Run each time wheel is updated.
