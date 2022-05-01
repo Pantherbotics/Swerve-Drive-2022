@@ -14,10 +14,11 @@ import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.ModuleConstants;
+import frc.robot.Constants.DriveConstants;
 
-
+//Units of everything were checked and verified as of May 1st, 2022
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
-public class SwerveModuleProto extends SwerveModule{
+public class SwerveModuleProto {
     private final int id;
     private final CANSparkMax drive;
     private final TalonSRX steer;
@@ -27,7 +28,7 @@ public class SwerveModuleProto extends SwerveModule{
     private final SparkMaxPIDController drivePID;
     private final PIDController steerPID;
     private final AnalogInput analogInput;
-    private final double steerOffsetRad; //In Radians
+    private final double steerOffsetRad;
 
     /**
      * @param id The id of the motors
@@ -42,8 +43,10 @@ public class SwerveModuleProto extends SwerveModule{
         steer = new TalonSRX(id);
 
         driveEncoder = drive.getEncoder();
+        driveEncoder.setPositionConversionFactor(ModuleConstants.kDriveEncoderRot2Meter);
+        driveEncoder.setVelocityConversionFactor(ModuleConstants.kDriveEncoderRPM2MeterPerSec);
 
-        steerPID = new PIDController(ModuleConstants.kPTurning, 0, 0);
+        steerPID = new PIDController(ModuleConstants.kPTurning, ModuleConstants.kITurning, ModuleConstants.kDTurning);
         steerPID.enableContinuousInput(-Math.PI, Math.PI);
 
         drivePID = drive.getPIDController();
@@ -57,25 +60,23 @@ public class SwerveModuleProto extends SwerveModule{
         resetEncoders();
     }
 
-
-    //TODO convert units
     public double getDrivePosition() {
         return driveEncoder.getPosition();
     }
 
-    //TODO convert units
+    //NEOs return rotations for getPosition, so convert ticks on TalonSRX to rotations, and then apply
+    // The conversion we could add for NEOs, but not for Talons
     public double getTurningPosition() {
-        return steer.getSelectedSensorPosition();
+        return (steer.getSelectedSensorPosition()/2048D) * ModuleConstants.kTurningEncoderRot2Rad;
     }
 
-    //TODO convert units
     public double getDriveVelocity() {
         return driveEncoder.getVelocity();
     }
 
-    //TODO convert units
+    //NEOs return RPM, so convert the ticks per 100 to RPM
     public double getTurningVelocity() {
-        return steer.getSelectedSensorVelocity();
+        return (((steer.getSelectedSensorVelocity()*10)/2048D)*60D) * ModuleConstants.kTurningEncoderRPM2RadPerSec;
     }
 
     public double getAbsoluteEncoderRad() {
@@ -85,18 +86,15 @@ public class SwerveModuleProto extends SwerveModule{
         return angle;
     }
 
-    //TODO convert units
     public void resetEncoders() {
         driveEncoder.setPosition(0);
         steer.setSelectedSensorPosition(getAbsoluteEncoderRad());
     }
 
-    //TODO check that units are correct
     public SwerveModuleState getState() {
         return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getTurningPosition()));
     }
 
-    //TODO verify units
     public void setDesiredState(SwerveModuleState state) {
         //If statement ignores when we let go of left stick so wheels aren't defaulting to 0 degrees
         if (Math.abs(state.speedMetersPerSecond) < 0.001) {
@@ -104,26 +102,16 @@ public class SwerveModuleProto extends SwerveModule{
             return;
         }
         state = SwerveModuleState.optimize(state, getState().angle);
-        drivePID.setReference(state.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
-        //drive.set(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
+
+        //If we want velocity PID control, this line will work instead:
+        //drivePID.setReference(state.speedMetersPerSecond*60D, CANSparkMax.ControlType.kVelocity);
+        drive.set(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
         steer.set(ControlMode.PercentOutput, steerPID.calculate(getTurningPosition(), state.angle.getRadians()));
         SmartDashboard.putString("Swerve[" + id + "] state", state.toString());
     }
 
-    //TODO make sure that set 0 for a TalonSRX does what we want it to do
     public void stop() {
         drive.set(0);
         steer.set(TalonSRXControlMode.PercentOutput, 0);
-    }
-
-    //TODO re-evaluate the SwerveModule class methods and arguments
-    @Override
-    public void update(double velocity, double angle) {
-        setDesiredState(new SwerveModuleState(velocity, new Rotation2d(angle)));
-    }
-
-    @Override
-    public boolean isAtTarget() {
-        return false;
     }
 }

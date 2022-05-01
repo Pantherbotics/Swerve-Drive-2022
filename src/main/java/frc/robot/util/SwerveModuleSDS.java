@@ -1,7 +1,6 @@
 package frc.robot.util;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
@@ -10,7 +9,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 @SuppressWarnings("unused")
-public class SwerveModuleSDS extends SwerveModule {
+public class SwerveModuleSDS {
     //Motors & Encoders
     private final WPI_TalonFX steer;
     private final WPI_TalonFX drive;
@@ -40,7 +39,6 @@ public class SwerveModuleSDS extends SwerveModule {
         //steer.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0, 0, 0);
     }
 
-    private double steerTarget = 0;
     /**
         * Setter Run each time wheel is updated.
         * @param velocity: target speed of the wheel in [-1, 1]
@@ -55,8 +53,7 @@ public class SwerveModuleSDS extends SwerveModule {
         double currAngle = getAngle();
         double error = getShortestError(angle, currAngle);
         double deltaSteerPos = error * Constants.angleGearRatio * 2048;
-        steerTarget = steer.getSelectedSensorPosition() + deltaSteerPos;
-        steer.set(ControlMode.Position, steerTarget);
+        steer.set(ControlMode.Position, steer.getSelectedSensorPosition() + deltaSteerPos);
         drive.set(ControlMode.Velocity, velocity * velFactor);
     }
 
@@ -71,15 +68,5 @@ public class SwerveModuleSDS extends SwerveModule {
         if (error > 180) { error -= 360; }
         else if (error < -180) { error += 360; }
         return error;
-    }
-
-    @Override
-    public void update(double velocity, double angle) {
-        updateModule(velocity, angle);
-    }
-
-    @Override
-    public boolean isAtTarget() {
-        return Math.abs(steer.getSelectedSensorPosition() - steerTarget) <= 128;
     }
 }

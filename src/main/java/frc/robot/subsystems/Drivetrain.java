@@ -10,36 +10,23 @@ import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
-import frc.robot.util.DriveMode;
 import frc.robot.util.SwerveModuleProto;
 
-//TODO ensure all units in this class are correct
 @SuppressWarnings("unused")
 public class Drivetrain extends SubsystemBase {
     public final SwerveModuleProto leftFront;
     public final SwerveModuleProto rightFront;
     public final SwerveModuleProto leftBack;
     public final SwerveModuleProto rightBack;
-    public DriveMode mode = DriveMode.FO_SWERVE;
 
     private final AHRS gyro = new AHRS(I2C.Port.kOnboard); //TODO figure out how to rewire [new AHRS(SPI.Port.kMXP)]
     private final SwerveDriveOdometry odometer = new SwerveDriveOdometry(DriveConstants.kDriveKinematics, new Rotation2d(0));
 
-
-    double debounce = 0.08; //Joystick debounce if sticks don't rest at 0
-    double W = 18; //Width of the Robot Chassis
-    double L = 18; //Length of the Robot Chassis
-
-    //The offset Angle that the front left wheel would have to adjust in order to rotate the robot clockwise
-    // when driving forwards (positively)
-    //This value is shifted for the other wheels automatically.
-    double rotationAngle = 90 - (Math.atan((L/2) / (W/2)) * 180/Math.PI);
-
     public Drivetrain(){
-        leftFront  = new SwerveModuleProto(1,  -80);
-        rightFront = new SwerveModuleProto(2,  155);
-        rightBack  = new SwerveModuleProto(3,    0);
-        leftBack   = new SwerveModuleProto(4, -160);
+        leftFront  = new SwerveModuleProto(1,  Math.toRadians( -80));
+        rightFront = new SwerveModuleProto(2,  Math.toRadians( 155));
+        rightBack  = new SwerveModuleProto(3,  Math.toRadians(   0));
+        leftBack   = new SwerveModuleProto(4,  Math.toRadians(-160));
 
         //leftFront  = new SwerveModule(1, 1,  2,  3, 0, drivePID, steerPID);
         //rightFront = new SwerveModule(2, 4,  5,  6, 0, drivePID, steerPID);
