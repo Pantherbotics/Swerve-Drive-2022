@@ -94,7 +94,7 @@ public class RobotContainer {
                 new Pose2d(2, -1, Rotation2d.fromDegrees(180)),
         trajectoryConfig);
 
-        Trajectory trajectory = trajectories.get("First Ball");
+        Trajectory trajectory = trajectories.get("Test1");
 
         //Trajectory numbers/coordinates are in meters from origin/start
         /*
