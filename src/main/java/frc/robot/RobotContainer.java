@@ -129,11 +129,12 @@ public class RobotContainer {
 
     public void loadTrajectories() {
         File[] jsonPaths = new File(String.valueOf(Filesystem.getDeployDirectory().toPath())).listFiles();
-        if (jsonPaths == null) { DriverStation.reportError("Could not automatically load trajectory path JSONs", new Exception("File[] of paths was null.").getStackTrace()); return; }
+        if (jsonPaths == null) { DriverStation.reportError("Could not automatically load trajectory path JSONs", false); return; }
         for (File file : jsonPaths) {
             String name = file.getName().substring(0, file.getName().length() - 12); //Crop .wpilib.json
             loadTrajectory(name);
         }
+        DriverStation.reportWarning("Trajectories Loaded", false);
     }
 
     public void loadTrajectory(String name) {
@@ -142,7 +143,7 @@ public class RobotContainer {
             Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
             trajectories.put(name, TrajectoryUtil.fromPathweaverJson(trajectoryPath));
         } catch (IOException ex) {
-            DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON, ex.getStackTrace());
+            DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON, false);
         }
     }
 
