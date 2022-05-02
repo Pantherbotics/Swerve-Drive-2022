@@ -41,11 +41,13 @@ public class RobotContainer {
     private final POVButton sJoyPOVE = new POVButton(pJoy, 90);  //POV East
 
     public RobotContainer() {
+        double exp = 7D/3D;
+        double scale = 4;
         drivetrain.setDefaultCommand(new RunSwerveJoystick(
                 drivetrain,
-                () -> -pJoy.getRawAxis(OIConstants.kDriverYAxis),
-                () -> pJoy.getRawAxis(OIConstants.kDriverXAxis),
-                () -> pJoy.getRawAxis(OIConstants.kDriverRotAxis)));
+                () -> -powAxis(pJoy.getRawAxis(OIConstants.kDriverYAxis), exp)/scale,
+                () -> powAxis(pJoy.getRawAxis(OIConstants.kDriverXAxis), exp)/scale,
+                () -> pJoy.getRawAxis(OIConstants.kDriverRotAxis)/scale));
 
         //For easy calibration, use this code instead to have all wheels drive forward
         //drivetrain.setDefaultCommand(new RunSwerveJoystick(drivetrain, () -> 0.1, () -> 0.0, () -> 0.0));
@@ -80,7 +82,7 @@ public class RobotContainer {
         Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
                 new Pose2d(0, 0, new Rotation2d(0)),
                 List.of(new Translation2d(1, 0)),
-                new Pose2d(1, 0, Rotation2d.fromDegrees(90)),
+                new Pose2d(-1, 0, Rotation2d.fromDegrees(0)),
         trajectoryConfig);
 
         // 3. Define PID controllers for tracking trajectory
@@ -102,6 +104,14 @@ public class RobotContainer {
                 swerveControllerCommand,
                 new InstantCommand(drivetrain::stopModules)
         );
+    }
+
+    public double powAxis(double a, double b) {
+        if (a >= 0) {
+            return Math.pow(a, b);
+        }else {
+            return -Math.pow(-a, b);
+        }
     }
 
     public void updateSmartDashboard() {
