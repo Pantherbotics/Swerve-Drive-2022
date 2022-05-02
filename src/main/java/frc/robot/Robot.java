@@ -18,22 +18,29 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.*;
+import frc.robot.util.NamedCommand;
 
 public class Robot extends TimedRobot {
+    public final SendableChooser<NamedCommand> autoChooser = new SendableChooser<>();
     public final SendableChooser<Double> speedChooser = new SendableChooser<>();
     private Command autonomousCommand;
     private RobotContainer robotContainer;
 
     @Override
     public void robotInit() {
-        robotContainer = new RobotContainer(this);
-
         speedChooser.setDefaultOption("Normal (Fast)", 1.0);
         speedChooser.addOption("Safe (Slow)", 4.0);
-
         SmartDashboard.putData(speedChooser);
+
+        //Load trajectories before robotContainer, which requires them for auto paths
+        robotContainer = new RobotContainer(this);
+
+        autoChooser.setDefaultOption("None", null);
+        for (NamedCommand command : robotContainer.autoPaths.paths) {
+            autoChooser.addOption(command.getName(), command);
+        }
+        SmartDashboard.putData(autoChooser);
     }
 
     @Override
@@ -60,7 +67,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
-        autonomousCommand = robotContainer.getAutonomousCommand();
+        autonomousCommand = autoChooser.getSelected().getCommand();
 
         // schedule the autonomous command (example)
         if (autonomousCommand != null) {
