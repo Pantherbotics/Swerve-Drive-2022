@@ -10,6 +10,7 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -29,6 +30,7 @@ import java.util.List;
 public class RobotContainer {
     //Subsystems
     private final Drivetrain drivetrain = new Drivetrain();
+    public final SendableChooser<Double> speedChooser;
 
     //Joysticks
     private final XboxController pJoy = new XboxController(Constants.pJoyID);
@@ -41,14 +43,15 @@ public class RobotContainer {
     private final POVButton sJoyPOVW = new POVButton(pJoy, 270); //POV West
     private final POVButton sJoyPOVE = new POVButton(pJoy, 90);  //POV East
 
-    public RobotContainer() {
+    public RobotContainer(Robot robot) {
+        speedChooser = robot.speedChooser;
         double exp = 7D/3D;
         double scale = 4;
         drivetrain.setDefaultCommand(new RunSwerveJoystick(
                 drivetrain,
-                () -> -powAxis(pJoy.getRawAxis(OIConstants.kDriverYAxis), exp)/scale,
-                () -> powAxis(pJoy.getRawAxis(OIConstants.kDriverXAxis), exp)/scale,
-                () -> pJoy.getRawAxis(OIConstants.kDriverRotAxis)/scale));
+                () -> -powAxis(pJoy.getRawAxis(OIConstants.kDriverYAxis), exp)/speedChooser.getSelected(),
+                () -> powAxis(pJoy.getRawAxis(OIConstants.kDriverXAxis), exp)/speedChooser.getSelected(),
+                () -> pJoy.getRawAxis(OIConstants.kDriverRotAxis)/speedChooser.getSelected()));
 
         //For easy calibration, use this code instead to have all wheels drive forward
         //drivetrain.setDefaultCommand(new RunSwerveJoystick(drivetrain, () -> 0.1, () -> 0.0, () -> 0.0));
@@ -83,7 +86,7 @@ public class RobotContainer {
         Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
                 new Pose2d(0, 0, new Rotation2d(0)),
                 List.of(new Translation2d(1, 0)),
-                new Pose2d(-1, 0, Rotation2d.fromDegrees(0)),
+                new Pose2d(1, 0, Rotation2d.fromDegrees(0)),
         trajectoryConfig);
 
         // 3. Define PID controllers for tracking trajectory
