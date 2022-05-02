@@ -65,9 +65,9 @@ public class Constants {
         //All the following Constants can be tuned:
         public static final double kMaxAccelerationMetersPerSecondSquared = 1.5;
         public static final double kMaxAngularAccelerationRadiansPerSecondSquared = Math.PI / 8;
-        public static final double kPXController = 0.75; //1.5
-        public static final double kPYController = 0.75; //1.5
-        public static final double kPThetaController = 1.5; //3
+        public static final double kPXController = 1.5;
+        public static final double kPYController = 1.5;
+        public static final double kPThetaController = 3;
 
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
                 new TrapezoidProfile.Constraints(
@@ -82,6 +82,6 @@ public class Constants {
         public static final int kDriverRotAxis = 4;
         public static final int kDriverFieldOrientedButtonIdx = 1;
 
-        public static final double kDeadband = 0.04; //Higher than average on the controller I'm using
+        public static final double kDeadband = 0.08; //Higher than average on the controller I'm using
     }
 }

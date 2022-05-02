@@ -93,7 +93,6 @@ public class SwerveModuleProto {
             stop();
             return;
         }
-        state = SwerveModuleState.optimize(state, getState().angle);
 
         //If we want velocity PID control, this line will work instead:
         //drivePID.setReference(state.speedMetersPerSecond*60D, CANSparkMax.ControlType.kVelocity);
