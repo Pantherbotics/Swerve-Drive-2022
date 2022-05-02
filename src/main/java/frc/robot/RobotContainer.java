@@ -8,6 +8,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.TrajectoryUtil;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -24,13 +27,19 @@ import frc.robot.Constants.OIConstants;
 import frc.robot.commands.RunSwerveJoystick;
 import frc.robot.subsystems.Drivetrain;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("unused")
 public class RobotContainer {
     //Subsystems
     private final Drivetrain drivetrain = new Drivetrain();
     public final SendableChooser<Double> speedChooser;
+    public final Map<String, Trajectory> trajectories = new HashMap<>();
 
     //Joysticks
     private final XboxController pJoy = new XboxController(Constants.pJoyID);
@@ -57,6 +66,9 @@ public class RobotContainer {
         //drivetrain.setDefaultCommand(new RunSwerveJoystick(drivetrain, () -> 0.1, () -> 0.0, () -> 0.0));
 
         configureButtonBindings();
+
+        //WPI warns that these take some time to load, so load them immediately before auto starts
+        loadTrajectories();
     }
 
     /**
@@ -82,12 +94,17 @@ public class RobotContainer {
                 ),
                 new Pose2d(2, -1, Rotation2d.fromDegrees(180)),
         trajectoryConfig);
+
+        Trajectory trajectory = trajectories.get("First Ball");
+
         //Trajectory numbers/coordinates are in meters from origin/start
-        Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
+        /*
+        trajectory = TrajectoryGenerator.generateTrajectory(
                 new Pose2d(0, 0, new Rotation2d(0)),
                 List.of(new Translation2d(1, 0)),
                 new Pose2d(1, 0, Rotation2d.fromDegrees(0)),
         trajectoryConfig);
+        */
 
         // 3. Define PID controllers for tracking trajectory
         PIDController xController = new PIDController(AutoConstants.kPXController, 0, 0);
@@ -108,6 +125,25 @@ public class RobotContainer {
                 swerveControllerCommand,
                 new InstantCommand(drivetrain::stopModules)
         );
+    }
+
+    public void loadTrajectories() {
+        File[] jsonPaths = new File(String.valueOf(Filesystem.getDeployDirectory().toPath())).listFiles();
+        if (jsonPaths == null) { DriverStation.reportError("Could not automatically load trajectory path JSONs", new Exception("File[] of paths was null.").getStackTrace()); return; }
+        for (File file : jsonPaths) {
+            String name = file.getName().substring(0, file.getName().length() - 12); //Crop .wpilib.json
+            loadTrajectory(name);
+        }
+    }
+
+    public void loadTrajectory(String name) {
+        String trajectoryJSON = "paths/" + name + ".wpilib.json";
+        try {
+            Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+            trajectories.put(name, TrajectoryUtil.fromPathweaverJson(trajectoryPath));
+        } catch (IOException ex) {
+            DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON, ex.getStackTrace());
+        }
     }
 
     public double powAxis(double a, double b) {
