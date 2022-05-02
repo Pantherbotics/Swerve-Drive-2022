@@ -55,7 +55,6 @@ public class RobotContainer {
     public RobotContainer(Robot robot) {
         speedChooser = robot.speedChooser;
         double exp = 7D/3D;
-        double scale = 4;
         drivetrain.setDefaultCommand(new RunSwerveJoystick(
                 drivetrain,
                 () -> -powAxis(pJoy.getRawAxis(OIConstants.kDriverYAxis), exp)/speedChooser.getSelected(),
