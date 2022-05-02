@@ -23,10 +23,10 @@ public class Drivetrain extends SubsystemBase {
     private final SwerveDriveOdometry odometer = new SwerveDriveOdometry(DriveConstants.kDriveKinematics, new Rotation2d(0));
 
     public Drivetrain(){
-        leftFront  = new SwerveModuleProto(1,  Math.toRadians( -80));
-        rightFront = new SwerveModuleProto(2,  Math.toRadians( 155));
-        rightBack  = new SwerveModuleProto(3,  Math.toRadians(   0));
-        leftBack   = new SwerveModuleProto(4,  Math.toRadians(-160));
+        leftFront  = new SwerveModuleProto(1,  165);
+        rightFront = new SwerveModuleProto(2,  290);
+        rightBack  = new SwerveModuleProto(3,   90);
+        leftBack   = new SwerveModuleProto(4, -105);
 
         //leftFront  = new SwerveModule(1, 1,  2,  3, 0, drivePID, steerPID);
         //rightFront = new SwerveModule(2, 4,  5,  6, 0, drivePID, steerPID);

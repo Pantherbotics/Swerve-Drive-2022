@@ -45,8 +45,10 @@ public class RobotContainer {
                 drivetrain,
                 () -> -pJoy.getRawAxis(OIConstants.kDriverYAxis),
                 () -> pJoy.getRawAxis(OIConstants.kDriverXAxis),
-                () -> pJoy.getRawAxis(OIConstants.kDriverRotAxis),
-                () -> !pJoy.getRawButton(OIConstants.kDriverFieldOrientedButtonIdx)));
+                () -> pJoy.getRawAxis(OIConstants.kDriverRotAxis)));
+
+        //For easy calibration, use this code instead to have all wheels drive forward
+        //drivetrain.setDefaultCommand(new RunSwerveJoystick(drivetrain, () -> 0.1, () -> 0.0, () -> 0.0));
 
         configureButtonBindings();
     }
@@ -63,59 +65,46 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         // 1. Create trajectory settings
-        TrajectoryConfig trajectoryConfig = new TrajectoryConfig(
-                AutoConstants.kMaxSpeedMetersPerSecond,
-                AutoConstants.kMaxAccelerationMetersPerSecondSquared)
-                .setKinematics(DriveConstants.kDriveKinematics);
+        TrajectoryConfig trajectoryConfig = new TrajectoryConfig(AutoConstants.kMaxSpeedMetersPerSecond, AutoConstants.kMaxAccelerationMetersPerSecondSquared).setKinematics(DriveConstants.kDriveKinematics);
 
         // 2. Generate trajectory
-        Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
+        Trajectory trajectory2 = TrajectoryGenerator.generateTrajectory(
                 new Pose2d(0, 0, new Rotation2d(0)),
                 List.of(
                         new Translation2d(1, 0),
-                        new Translation2d(1, -1)),
+                        new Translation2d(1, -1)
+                ),
                 new Pose2d(2, -1, Rotation2d.fromDegrees(180)),
-                trajectoryConfig);
+        trajectoryConfig);
+        //Trajectory numbers/coordinates are in meters from origin/start
+        Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
+                new Pose2d(0, 0, new Rotation2d(0)),
+                List.of(new Translation2d(1, 0)),
+                new Pose2d(1, 0, Rotation2d.fromDegrees(90)),
+        trajectoryConfig);
 
         // 3. Define PID controllers for tracking trajectory
         PIDController xController = new PIDController(AutoConstants.kPXController, 0, 0);
         PIDController yController = new PIDController(AutoConstants.kPYController, 0, 0);
-        ProfiledPIDController thetaController = new ProfiledPIDController(
-                AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
+        ProfiledPIDController thetaController = new ProfiledPIDController(AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
         thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
         // 4. Construct command to follow trajectory
         SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
-                trajectory,
-                drivetrain::getPose,
-                DriveConstants.kDriveKinematics,
-                xController,
-                yController,
-                thetaController,
-                drivetrain::setModuleStates,
-                drivetrain
+                trajectory, drivetrain::getPose, DriveConstants.kDriveKinematics,
+                xController, yController, thetaController,
+                drivetrain::setModuleStates, drivetrain
         );
 
         // 5. Add some init and wrap-up, and return everything
         return new SequentialCommandGroup(
                 new InstantCommand(() -> drivetrain.resetOdometry(trajectory.getInitialPose())),
                 swerveControllerCommand,
-                new InstantCommand(drivetrain::stopModules));
+                new InstantCommand(drivetrain::stopModules)
+        );
     }
 
-
     public void updateSmartDashboard() {
-        /*
-        SmartDashboard.putString("Mode", drivetrain.mode.getName());
 
-        SmartDashboard.putNumber("InitGyro", drivetrain.initialRotation);
-        SmartDashboard.putNumber("TargetGyro", drivetrain.targetRotation);
-        SmartDashboard.putNumber("Gyro", drivetrain.getGyroRot());
-
-        double rotTargetError = drivetrain.targetRotation - drivetrain.getGyroRot();
-        double deltaTargetRot = rotTargetError / 8D;
-        SmartDashboard.putNumber("Rotation Target Error", rotTargetError);
-        SmartDashboard.putNumber("Delta Target Rot", deltaTargetRot);
-        */
     }
 }

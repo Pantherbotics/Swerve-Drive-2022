@@ -1,7 +1,6 @@
 package frc.robot.util;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -11,10 +10,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants.ModuleConstants;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.ModuleConstants;
 
 //Units of everything were checked and verified as of May 1st, 2022
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
@@ -28,7 +25,9 @@ public class SwerveModuleProto {
     private final SparkMaxPIDController drivePID;
     private final PIDController steerPID;
     private final AnalogInput analogInput;
-    private final double steerOffsetRad;
+    private final double offset; //In Degrees
+
+    private final double potMax = 3798;
 
     /**
      * @param id The id of the motors
@@ -36,7 +35,7 @@ public class SwerveModuleProto {
      */
     public SwerveModuleProto(int id, double offset) {
         this.id = id;
-        this.steerOffsetRad = offset;
+        this.offset = offset;
         analogInput = new AnalogInput(id - 1);
 
         drive = new CANSparkMax(id, MotorType.kBrushless); drive.restoreFactoryDefaults();
@@ -79,16 +78,9 @@ public class SwerveModuleProto {
         return (((steer.getSelectedSensorVelocity()*10)/2048D)*60D) * ModuleConstants.kTurningEncoderRPM2RadPerSec;
     }
 
-    public double getAbsoluteEncoderRad() {
-        double angle = analogInput.getVoltage() / RobotController.getVoltage5V();
-        angle *= 2.0 * Math.PI;
-        angle -= steerOffsetRad;
-        return angle;
-    }
-
     public void resetEncoders() {
         driveEncoder.setPosition(0);
-        steer.setSelectedSensorPosition(getAbsoluteEncoderRad());
+        //steer.setSelectedSensorPosition(getAbsoluteEncoderRad());
     }
 
     public SwerveModuleState getState() {
@@ -101,17 +93,26 @@ public class SwerveModuleProto {
             stop();
             return;
         }
-        state = SwerveModuleState.optimize(state, getState().angle);
 
         //If we want velocity PID control, this line will work instead:
         //drivePID.setReference(state.speedMetersPerSecond*60D, CANSparkMax.ControlType.kVelocity);
         drive.set(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
-        steer.set(ControlMode.PercentOutput, steerPID.calculate(getTurningPosition(), state.angle.getRadians()));
-        SmartDashboard.putString("Swerve[" + id + "] state", state.toString());
+        steer.set(ControlMode.PercentOutput, steerPID.calculate(getAbsoluteEncoderRad(), state.angle.getRadians()));
     }
 
     public void stop() {
         drive.set(0);
-        steer.set(TalonSRXControlMode.PercentOutput, 0);
+        steer.set(ControlMode.PercentOutput, 0);
+    }
+
+    //Returns angle in radians [-pi, pi]
+    public double getAbsoluteEncoderRad() {
+        double angle = analogInput.getValue() / potMax;
+        angle *= (2.0 * Math.PI);
+        angle -= Math.PI; //Convert from [0, 2pi] to [-pi, pi]
+        angle -= Math.toRadians(offset);
+        while (angle > Math.PI) { angle -= 2 * Math.PI; }
+        while (angle < -Math.PI) { angle += 2 * Math.PI; }
+        return angle;
     }
 }
