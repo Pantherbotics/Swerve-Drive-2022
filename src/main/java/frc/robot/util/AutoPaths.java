@@ -2,6 +2,8 @@ package frc.robot.util;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryUtil;
@@ -19,6 +21,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+
+
+//-------------------------------------------------------------------------------------------------
+//      PathWeaver Notes:
+// 1. In order to go backwards, you must keep track of the start and end nodes, and reverse the spline
+// 2.
+//-------------------------------------------------------------------------------------------------
 
 @SuppressWarnings("unused")
 public class AutoPaths {
@@ -39,18 +48,32 @@ public class AutoPaths {
 
         paths.add(
                 new NamedCommand(
-                        "Test1",
-                        getAutoCmdFromTrajectories("Test1")
+                        "Test 1",
+                        getAutoCmdFromTrajectories(true, "Test1")
+                )
+        );
+
+        paths.add(
+                new NamedCommand(
+                        "Test 2",
+                        getAutoCmdFromTrajectories(true, "Test2")
+                )
+        );
+
+        paths.add(
+                new NamedCommand(
+                        "Test 3",
+                        getAutoCmdFromTrajectories(true, "Test3")
                 )
         );
     }
 
-    public @Nullable Command getAutoCmdFromTrajectories(String... trajectoryNames) {
+    public @Nullable Command getAutoCmdFromTrajectories(boolean firstTraj, String... trajectoryNames) {
         List<Trajectory> trajectories = new ArrayList<>();
         for (String name : trajectoryNames) {
             trajectories.add(loadTrajectory(name));
         }
-        return wrapTrajectories(trajectories.toArray(Trajectory[]::new));
+        return wrapTrajectories(firstTraj, trajectories.toArray(Trajectory[]::new));
     }
 
     private Trajectory loadTrajectory(String name) {
@@ -64,7 +87,7 @@ public class AutoPaths {
         return null;
     }
 
-    private @Nullable Command wrapTrajectories(Trajectory... trajectories) {
+    private @Nullable Command wrapTrajectories(boolean firstTraj, Trajectory... trajectories) {
         if (trajectories == null || trajectories.length == 0) { return null; }
 
         List<Command> commands = new ArrayList<>();
@@ -78,7 +101,9 @@ public class AutoPaths {
         }
 
         //Add some init and wrap-up commands (Zero odometry before, and stop modules after)
-        commands.add(0, new InstantCommand(() -> drivetrain.resetOdometry(trajectories[0].getInitialPose())));
+        if (firstTraj) {
+            commands.add(0, new InstantCommand(() -> drivetrain.resetOdometry(trajectories[0].getInitialPose())));
+        }
         commands.add(new InstantCommand(drivetrain::stopModules));
         return new SequentialCommandGroup(commands.toArray(Command[]::new));
     }
