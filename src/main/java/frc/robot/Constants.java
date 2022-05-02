@@ -21,7 +21,7 @@ public class Constants {
 
     //Checked and verified as of May 1st, 2022
     public static final class ModuleConstants {
-        public static final double kWheelDiameterMeters = Units.inchesToMeters(3.75); //4 when new
+        public static final double kWheelDiameterMeters = Units.inchesToMeters(4); //4 when new
         public static final double kDriveMotorGearRatio = 2/15D; // 12:30 then 15:45
         public static final double kTurningMotorGearRatio = 0.036; // 12:100 then 18:60
         public static final double kDriveEncoderRot2Meter = kDriveMotorGearRatio * Math.PI * kWheelDiameterMeters;
