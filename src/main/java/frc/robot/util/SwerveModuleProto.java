@@ -61,24 +61,22 @@ public class SwerveModuleProto {
         resetEncoders();
     }
 
-    public double getDrivePosition() {
-        return driveEncoder.getPosition();
-    }
+    //public double getDrivePosition() { return driveEncoder.getPosition(); }
 
     //NEOs return rotations for getPosition, so convert ticks on TalonSRX to rotations, and then apply
     // The conversion we could add for NEOs, but not for Talons
-    public double getTurningPosition() {
+    private double getTurningPosition() {
         return (steer.getSelectedSensorPosition()/2048D) * ModuleConstants.kTurningEncoderRot2Rad;
+        //return getAbsoluteEncoderRad() + Math.PI/2; //Probably this one
+        //return getAbsoluteEncoderRad();
     }
 
-    public double getDriveVelocity() {
+    private double getDriveVelocity() {
         return driveEncoder.getVelocity();
     }
 
-    //NEOs return RPM, so convert the ticks per 100 to RPM
-    public double getTurningVelocity() {
-        return (((steer.getSelectedSensorVelocity()*10)/2048D)*60D) * ModuleConstants.kTurningEncoderRPM2RadPerSec;
-    }
+    //BROKEN (since steer doesn't have an encoder)       NEOs return RPM, so convert the ticks per 100 to RPM
+    //public double getTurningVelocity() { return (((steer.getSelectedSensorVelocity()*10)/2048D)*60D) * ModuleConstants.kTurningEncoderRPM2RadPerSec; }
 
     public void resetEncoders() {
         driveEncoder.setPosition(0);
