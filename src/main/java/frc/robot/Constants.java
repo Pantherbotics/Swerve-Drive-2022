@@ -19,6 +19,8 @@ public class Constants {
     //Drivetrain
     public static final double angleGearRatio = 1.0; //TODO: Calculate this (We have below, sort of)
 
+    public static final boolean optimizeModuleStates = true;
+
     //Checked and verified as of May 1st, 2022
     public static final class ModuleConstants {
         public static final double kWheelDiameterMeters = Units.inchesToMeters(4); //4 when new

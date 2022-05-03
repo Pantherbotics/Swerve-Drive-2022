@@ -10,6 +10,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.ModuleConstants;
 
@@ -84,6 +86,11 @@ public class SwerveModuleProto {
     }
 
     public SwerveModuleState getState() {
+        //TODO i suspect that drive velocity is working, but getTurningPosition is not
+        //The TalonSRX does not have an encoder to drive its pid, it's using the analog input
+        //Probably just have to get wheel angle instead
+        SmartDashboard.putNumber("Swerve[" + id + "] Drive Vel (RPM)", getDriveVelocity());
+        SmartDashboard.putNumber("Swerve[" + id + "] Wheel Rot (Rad)", getTurningPosition());
         return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getTurningPosition()));
     }
 
@@ -93,7 +100,7 @@ public class SwerveModuleProto {
             stop();
             return;
         }
-        state = SwerveModuleState.optimize(state, getState().angle);
+        if (Constants.optimizeModuleStates) { state = SwerveModuleState.optimize(state, getState().angle); }
 
         //If we want velocity PID control, this line will work instead:
         //drivePID.setReference(state.speedMetersPerSecond*60D, CANSparkMax.ControlType.kVelocity);

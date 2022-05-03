@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.util.SwerveModuleProto;
 
@@ -65,7 +66,17 @@ public class Drivetrain extends SubsystemBase {
 
     @Override
     public void periodic() {
-        odometer.update(getRotation2d(), leftFront.getState(), rightFront.getState(), leftBack.getState(), rightBack.getState());
+        if (!Constants.optimizeModuleStates) {
+            //If we aren't optimizing them
+            SwerveModuleState lFState = SwerveModuleState.optimize(leftFront.getState(), leftFront.getState().angle);
+            SwerveModuleState rFState = SwerveModuleState.optimize(rightFront.getState(), rightFront.getState().angle);
+            SwerveModuleState lBState = SwerveModuleState.optimize(leftBack.getState(), leftBack.getState().angle);
+            SwerveModuleState rBState = SwerveModuleState.optimize(rightBack.getState(), rightBack.getState().angle);
+            odometer.update(getRotation2d(), lFState, rFState, lBState, rBState);
+        }else {
+            odometer.update(getRotation2d(), leftFront.getState(), rightFront.getState(), leftBack.getState(), rightBack.getState());
+        }
+
         SmartDashboard.putNumber("Robot Heading", getHeading());
         SmartDashboard.putString("Robot Location", getPose().getTranslation().toString());
     }
