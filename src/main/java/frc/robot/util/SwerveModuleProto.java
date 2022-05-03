@@ -67,7 +67,7 @@ public class SwerveModuleProto {
     // The conversion we could add for NEOs, but not for Talons
     private double getTurningPosition() {
         return (steer.getSelectedSensorPosition()/2048D) * ModuleConstants.kTurningEncoderRot2Rad;
-        //return getAbsoluteEncoderRad() + Math.PI/2; //Probably this one
+        //return getAbsoluteEncoderRad() + Math.PI; //Probably this one
         //return getAbsoluteEncoderRad();
     }
 
