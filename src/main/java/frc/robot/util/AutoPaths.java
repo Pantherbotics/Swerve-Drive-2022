@@ -4,8 +4,10 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -66,6 +68,27 @@ public class AutoPaths {
                         getAutoCmdFromTrajectories(true, "Test3")
                 )
         );
+
+        paths.add(
+                new NamedCommand(
+                        "Test 4",
+                        getAutoCmdFromTrajectories(true, "Test4")
+                )
+        );
+
+        paths.add(
+                new NamedCommand(
+                        "Test 5",
+                        getAutoCmdFromTrajectories(true, "Test5")
+                )
+        );
+
+        paths.add(
+                new NamedCommand(
+                        "Test 6",
+                        getAutoCmdFromTrajectories(true, "Test6")
+                )
+        );
     }
 
     public @Nullable Command getAutoCmdFromTrajectories(boolean firstTraj, String... trajectoryNames) {
@@ -96,7 +119,7 @@ public class AutoPaths {
             commands.add(new SwerveControllerCommand(
                     trajectory, drivetrain::getPose, Constants.DriveConstants.kDriveKinematics,
                     xController, yController, thetaController,
-                    drivetrain::setModuleStates, drivetrain
+                    drivetrain::setModuleStates, drivetrain //or drivetrain::setModuleStatesAuto
             ));
         }
 
@@ -104,7 +127,7 @@ public class AutoPaths {
         if (firstTraj) {
             commands.add(0, new InstantCommand(() -> drivetrain.resetOdometry(trajectories[0].getInitialPose())));
         }
-        commands.add(new InstantCommand(drivetrain::stopModules));
+        //commands.add(new InstantCommand(drivetrain::stopModules));
         return new SequentialCommandGroup(commands.toArray(Command[]::new));
     }
 }

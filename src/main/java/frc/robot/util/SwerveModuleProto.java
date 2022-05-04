@@ -8,6 +8,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -66,9 +67,8 @@ public class SwerveModuleProto {
     //NEOs return rotations for getPosition, so convert ticks on TalonSRX to rotations, and then apply
     // The conversion we could add for NEOs, but not for Talons
     private double getTurningPosition() {
-        return (steer.getSelectedSensorPosition()/2048D) * ModuleConstants.kTurningEncoderRot2Rad;
-        //return getAbsoluteEncoderRad() + Math.PI; //Probably this one
-        //return getAbsoluteEncoderRad();
+        //return (steer.getSelectedSensorPosition()/2048D) * ModuleConstants.kTurningEncoderRot2Rad;
+        return getAbsoluteEncoderRad(); //TODO negative for not optimized
     }
 
     private double getDriveVelocity() {
@@ -87,8 +87,8 @@ public class SwerveModuleProto {
         //TODO i suspect that drive velocity is working, but getTurningPosition is not
         //The TalonSRX does not have an encoder to drive its pid, it's using the analog input
         //Probably just have to get wheel angle instead
-        SmartDashboard.putNumber("Swerve[" + id + "] Drive Vel (RPM)", getDriveVelocity());
-        SmartDashboard.putNumber("Swerve[" + id + "] Wheel Rot (Rad)", getTurningPosition());
+        //SmartDashboard.putNumber("Swerve[" + id + "] Drive Vel (RPM)", getDriveVelocity());
+        //SmartDashboard.putNumber("Swerve[" + id + "] Wheel Rot (Rad)", getTurningPosition());
         return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getTurningPosition()));
     }
 
@@ -98,7 +98,9 @@ public class SwerveModuleProto {
             stop();
             return;
         }
-        if (Constants.optimizeModuleStates) { state = SwerveModuleState.optimize(state, getState().angle); }
+        //state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
+
+        SmartDashboard.putNumber("Swerve[" + id + "] SA", state.angle.getRadians());
 
         //If we want velocity PID control, this line will work instead:
         //drivePID.setReference(state.speedMetersPerSecond*60D, CANSparkMax.ControlType.kVelocity);
@@ -111,7 +113,7 @@ public class SwerveModuleProto {
         steer.set(ControlMode.PercentOutput, 0);
     }
 
-    //Returns angle in radians [-pi, pi]
+    //Returns angle in nobody knows
     public double getAbsoluteEncoderRad() {
         double angle = analogInput.getValue() / potMax;
         angle *= (2.0 * Math.PI);

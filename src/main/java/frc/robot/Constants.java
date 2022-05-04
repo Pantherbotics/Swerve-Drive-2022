@@ -19,8 +19,6 @@ public class Constants {
     //Drivetrain
     public static final double angleGearRatio = 1.0; //TODO: Calculate this (We have below, sort of)
 
-    public static final boolean optimizeModuleStates = true;
-
     //Checked and verified as of May 1st, 2022
     public static final class ModuleConstants {
         public static final double kWheelDiameterMeters = Units.inchesToMeters(4); //4 when new
@@ -62,13 +60,13 @@ public class Constants {
 
     //Checked and verified as of May 1st, 2022
     public static final class AutoConstants {
-        public static final double kMaxSpeedMetersPerSecond = DriveConstants.kPhysicalMaxSpeedMetersPerSecond / 4;
-        public static final double kMaxAngularSpeedRadiansPerSecond = DriveConstants.kPhysicalMaxAngularSpeedRadiansPerSecond / 2.5;
+        public static final double kMaxSpeedMetersPerSecond = DriveConstants.kPhysicalMaxSpeedMetersPerSecond / 24;
+        public static final double kMaxAngularSpeedRadiansPerSecond = DriveConstants.kPhysicalMaxAngularSpeedRadiansPerSecond / 5; //2.5
         //All the following Constants can be tuned:
-            public static final double kMaxAccelerationMetersPerSecondSquared = 1.0;
-        public static final double kMaxAngularAccelerationRadiansPerSecondSquared = Math.PI / 8;
+        public static final double kMaxAccelerationMetersPerSecondSquared = 0.1; //1.0
+        public static final double kMaxAngularAccelerationRadiansPerSecondSquared = Math.PI / 16;
         public static final double kPXController = 2.5; //1.5
-        public static final double kPYController = 2.5; //1.5
+        public static final double kPYController = 2.5; //2.5
         public static final double kPThetaController = 3.0; //3
 
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =

@@ -66,5 +66,9 @@ public class RobotContainer {
 
     public void updateSmartDashboard() {
         SmartDashboard.putNumber("Gyro", drivetrain.getHeading());
+        SmartDashboard.putNumber("S1 A", drivetrain.leftFront.getAbsoluteEncoderRad());
+        SmartDashboard.putNumber("S2 A", drivetrain.rightFront.getAbsoluteEncoderRad());
+        SmartDashboard.putNumber("S3 A", drivetrain.rightBack.getAbsoluteEncoderRad());
+        SmartDashboard.putNumber("S4 A", drivetrain.leftBack.getAbsoluteEncoderRad());
     }
 }

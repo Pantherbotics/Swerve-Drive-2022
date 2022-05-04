@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -24,11 +25,12 @@ public class Drivetrain extends SubsystemBase {
     private final AHRS gyro = new AHRS(I2C.Port.kOnboard); //TODO figure out how to rewire [new AHRS(SPI.Port.kMXP)]
     private final SwerveDriveOdometry odometer = new SwerveDriveOdometry(DriveConstants.kDriveKinematics, new Rotation2d(0));
 
-    public Drivetrain(){
-        leftFront  = new SwerveModuleProto(1,  165);
-        rightFront = new SwerveModuleProto(2,  290);
-        rightBack  = new SwerveModuleProto(3,   90);
-        leftBack   = new SwerveModuleProto(4, -105);
+    public Drivetrain() {
+        double offset = 0;
+        leftFront  = new SwerveModuleProto(1,  165+offset); //165
+        rightFront = new SwerveModuleProto(2,  290+offset); //290
+        rightBack  = new SwerveModuleProto(3,   90+offset); //90
+        leftBack   = new SwerveModuleProto(4,  -20+offset); //-20
 
         //leftFront  = new SwerveModule(1, 1,  2,  3, 0, drivePID, steerPID);
         //rightFront = new SwerveModule(2, 4,  5,  6, 0, drivePID, steerPID);
@@ -48,7 +50,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public double getHeading() {
-        return Math.IEEEremainder(gyro.getAngle(), 360);
+        return Math.IEEEremainder(-gyro.getAngle(), 360);
     }
 
     public Rotation2d getRotation2d() {
@@ -66,16 +68,7 @@ public class Drivetrain extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (!Constants.optimizeModuleStates) {
-            //If we aren't optimizing them
-            SwerveModuleState lFState = SwerveModuleState.optimize(leftFront.getState(), leftFront.getState().angle);
-            SwerveModuleState rFState = SwerveModuleState.optimize(rightFront.getState(), rightFront.getState().angle);
-            SwerveModuleState lBState = SwerveModuleState.optimize(leftBack.getState(), leftBack.getState().angle);
-            SwerveModuleState rBState = SwerveModuleState.optimize(rightBack.getState(), rightBack.getState().angle);
-            odometer.update(getRotation2d(), lFState, rFState, lBState, rBState);
-        }else {
-            odometer.update(getRotation2d(), leftFront.getState(), rightFront.getState(), leftBack.getState(), rightBack.getState());
-        }
+        odometer.update(getRotation2d(), leftFront.getState(), rightFront.getState(), leftBack.getState(), rightBack.getState());
 
         SmartDashboard.putNumber("Robot Heading", getHeading());
         SmartDashboard.putString("Robot Location", getPose().getTranslation().toString());
