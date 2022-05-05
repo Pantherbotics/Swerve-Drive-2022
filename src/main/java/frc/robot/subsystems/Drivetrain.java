@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -48,25 +49,35 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public double getHeading() {
-        return Math.IEEEremainder(gyro.getAngle(), 360);
-    }
-
-    public Rotation2d getRotation2d() {
-        return Rotation2d.fromDegrees(getHeading());
+        return Math.IEEEremainder(-gyro.getAngle(), 360);
     }
 
     public Pose2d getPose() {
         return odometer.getPoseMeters();
+        //Pose2d curr = odometer.getPoseMeters();
+        //return new Pose2d(new Translation2d(curr.getX(), -curr.getY()), curr.getRotation());
     }
 
     public void resetOdometry(Pose2d pose) {
         DriverStation.reportWarning(pose.toString(), false);
-        odometer.resetPosition(pose, getRotation2d());
+        odometer.resetPosition(pose, Rotation2d.fromDegrees(getHeading()));
     }
 
     @Override
     public void periodic() {
-        odometer.update(getRotation2d(), leftFront.getState(), rightFront.getState(), leftBack.getState(), rightBack.getState());
+        //odometer.update(getRotation2d(), leftFront.getState(), rightFront.getState(), leftBack.getState(), rightBack.getState());
+        SwerveModuleState lF = leftFront.getState();
+        SwerveModuleState rF = rightFront.getState();
+        SwerveModuleState rB = rightBack.getState();
+        SwerveModuleState lB = leftBack.getState();
+        lF = new SwerveModuleState(lF.speedMetersPerSecond, new Rotation2d(-lF.angle.getRadians()));
+        rF = new SwerveModuleState(rF.speedMetersPerSecond, new Rotation2d(-rF.angle.getRadians()));
+        rB = new SwerveModuleState(rB.speedMetersPerSecond, new Rotation2d(-rB.angle.getRadians()));
+        lB = new SwerveModuleState(lB.speedMetersPerSecond, new Rotation2d(-lB.angle.getRadians()));
+
+        odometer.update(Rotation2d.fromDegrees(getHeading()), rF, lF, rB, lB);
+        //odometer.update(getRotation2d(), rightFront.getState(), leftFront.getState(), rightBack.getState(), leftBack.getState());
+
 
         SmartDashboard.putNumber("Robot Heading", getHeading());
         SmartDashboard.putString("Robot Location", getPose().getTranslation().toString());

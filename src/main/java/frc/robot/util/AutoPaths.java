@@ -119,7 +119,7 @@ public class AutoPaths {
             commands.add(new SwerveControllerCommand(
                     trajectory, drivetrain::getPose, Constants.DriveConstants.kDriveKinematics,
                     xController, yController, thetaController,
-                    drivetrain::setModuleStatesAuto, drivetrain //or drivetrain::setModuleStatesAuto
+                    drivetrain::setModuleStatesAuto, drivetrain
             ));
         }
 

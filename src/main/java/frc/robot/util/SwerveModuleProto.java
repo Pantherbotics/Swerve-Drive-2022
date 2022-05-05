@@ -88,7 +88,7 @@ public class SwerveModuleProto {
         //Probably just have to get wheel angle instead
         //SmartDashboard.putNumber("Swerve[" + id + "] Drive Vel (RPM)", getDriveVelocity());
         //SmartDashboard.putNumber("Swerve[" + id + "] Wheel Rot (Rad)", getTurningPosition());
-        return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getTurningPosition()));
+        return new SwerveModuleState(getDriveVelocity(), new Rotation2d(-getTurningPosition()));
     }
 
     public void setDesiredState(SwerveModuleState state) {
@@ -108,6 +108,7 @@ public class SwerveModuleProto {
     }
 
     public void setDesiredStateAuto(SwerveModuleState state) {
+        state = new SwerveModuleState(state.speedMetersPerSecond, new Rotation2d(-state.angle.getRadians()));
         state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
 
         SmartDashboard.putNumber("Swerve[" + id + "] SA", state.angle.getRadians());
@@ -115,7 +116,7 @@ public class SwerveModuleProto {
         //If we want velocity PID control, this line will work instead:
         //drivePID.setReference(state.speedMetersPerSecond*60D, CANSparkMax.ControlType.kVelocity);
         drive.set(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
-        steer.set(ControlMode.PercentOutput, steerPID.calculate(getAbsoluteEncoderRad(), -state.angle.getRadians()));
+        steer.set(ControlMode.PercentOutput, steerPID.calculate(getAbsoluteEncoderRad(), state.angle.getRadians()));
     }
 
     public void stop() {
