@@ -3,15 +3,13 @@ package frc.robot.subsystems;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.util.SwerveModuleProto;
 
@@ -22,7 +20,7 @@ public class Drivetrain extends SubsystemBase {
     public final SwerveModuleProto leftBack;
     public final SwerveModuleProto rightBack;
 
-    private final AHRS gyro = new AHRS(I2C.Port.kOnboard); //TODO figure out how to rewire [new AHRS(SPI.Port.kMXP)]
+    private final AHRS gyro = new AHRS(SPI.Port.kMXP);
     private final SwerveDriveOdometry odometer = new SwerveDriveOdometry(DriveConstants.kDriveKinematics, new Rotation2d(0));
 
     public Drivetrain() {
@@ -50,7 +48,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public double getHeading() {
-        return Math.IEEEremainder(-gyro.getAngle(), 360);
+        return Math.IEEEremainder(gyro.getAngle(), 360);
     }
 
     public Rotation2d getRotation2d() {
@@ -87,6 +85,15 @@ public class Drivetrain extends SubsystemBase {
         rightFront.setDesiredState(desiredStates[1]);
         leftBack.setDesiredState(desiredStates[2]);
         rightBack.setDesiredState(desiredStates[3]);
+    }
+
+    public void setModuleStatesAuto(SwerveModuleState[] desiredStates) {
+        SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
+        //Flip left and right sides, i don't know why
+        leftFront.setDesiredStateAuto(desiredStates[1]);
+        rightFront.setDesiredStateAuto(desiredStates[0]);
+        leftBack.setDesiredStateAuto(desiredStates[3]);
+        rightBack.setDesiredStateAuto(desiredStates[2]);
     }
 }
 

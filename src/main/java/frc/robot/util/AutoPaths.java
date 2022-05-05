@@ -50,42 +50,42 @@ public class AutoPaths {
 
         paths.add(
                 new NamedCommand(
-                        "Test 1",
+                        "Forward 2m",
                         getAutoCmdFromTrajectories(true, "Test1")
                 )
         );
 
         paths.add(
                 new NamedCommand(
-                        "Test 2",
+                        "Back 2m",
                         getAutoCmdFromTrajectories(true, "Test2")
                 )
         );
 
         paths.add(
                 new NamedCommand(
-                        "Test 3",
+                        "Left 2m",
                         getAutoCmdFromTrajectories(true, "Test3")
                 )
         );
 
         paths.add(
                 new NamedCommand(
-                        "Test 4",
+                        "Right 2m",
                         getAutoCmdFromTrajectories(true, "Test4")
                 )
         );
 
         paths.add(
                 new NamedCommand(
-                        "Test 5",
+                        "Circle starting on the Left of it",
                         getAutoCmdFromTrajectories(true, "Test5")
                 )
         );
 
         paths.add(
                 new NamedCommand(
-                        "Test 6",
+                        "Arc forward/right turn right",
                         getAutoCmdFromTrajectories(true, "Test6")
                 )
         );
@@ -119,7 +119,7 @@ public class AutoPaths {
             commands.add(new SwerveControllerCommand(
                     trajectory, drivetrain::getPose, Constants.DriveConstants.kDriveKinematics,
                     xController, yController, thetaController,
-                    drivetrain::setModuleStates, drivetrain //or drivetrain::setModuleStatesAuto
+                    drivetrain::setModuleStatesAuto, drivetrain //or drivetrain::setModuleStatesAuto
             ));
         }
 

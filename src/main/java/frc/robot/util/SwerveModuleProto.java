@@ -68,7 +68,7 @@ public class SwerveModuleProto {
     // The conversion we could add for NEOs, but not for Talons
     private double getTurningPosition() {
         //return (steer.getSelectedSensorPosition()/2048D) * ModuleConstants.kTurningEncoderRot2Rad;
-        return getAbsoluteEncoderRad(); //TODO negative for not optimized
+        return -getAbsoluteEncoderRad();
     }
 
     private double getDriveVelocity() {
@@ -84,7 +84,6 @@ public class SwerveModuleProto {
     }
 
     public SwerveModuleState getState() {
-        //TODO i suspect that drive velocity is working, but getTurningPosition is not
         //The TalonSRX does not have an encoder to drive its pid, it's using the analog input
         //Probably just have to get wheel angle instead
         //SmartDashboard.putNumber("Swerve[" + id + "] Drive Vel (RPM)", getDriveVelocity());
@@ -98,7 +97,7 @@ public class SwerveModuleProto {
             stop();
             return;
         }
-        //state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
+        state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
 
         SmartDashboard.putNumber("Swerve[" + id + "] SA", state.angle.getRadians());
 
@@ -106,6 +105,17 @@ public class SwerveModuleProto {
         //drivePID.setReference(state.speedMetersPerSecond*60D, CANSparkMax.ControlType.kVelocity);
         drive.set(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
         steer.set(ControlMode.PercentOutput, steerPID.calculate(getAbsoluteEncoderRad(), state.angle.getRadians()));
+    }
+
+    public void setDesiredStateAuto(SwerveModuleState state) {
+        state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
+
+        SmartDashboard.putNumber("Swerve[" + id + "] SA", state.angle.getRadians());
+
+        //If we want velocity PID control, this line will work instead:
+        //drivePID.setReference(state.speedMetersPerSecond*60D, CANSparkMax.ControlType.kVelocity);
+        drive.set(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
+        steer.set(ControlMode.PercentOutput, steerPID.calculate(getAbsoluteEncoderRad(), -state.angle.getRadians()));
     }
 
     public void stop() {
