@@ -8,6 +8,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -21,7 +22,7 @@ public class Drivetrain extends SubsystemBase {
     public final SwerveModuleProto leftBack;
     public final SwerveModuleProto rightBack;
 
-    private final AHRS gyro = new AHRS(SPI.Port.kMXP);
+    private final AHRS gyro = new AHRS(I2C.Port.kOnboard);
     private final SwerveDriveOdometry odometer = new SwerveDriveOdometry(DriveConstants.kDriveKinematics, new Rotation2d(0));
 
     public Drivetrain() {

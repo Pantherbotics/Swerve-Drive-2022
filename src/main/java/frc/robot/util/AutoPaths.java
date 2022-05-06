@@ -89,6 +89,13 @@ public class AutoPaths {
                         getAutoCmdFromTrajectories(true, "Test6")
                 )
         );
+
+        paths.add(
+                new NamedCommand(
+                        "Circle w/ Rotation",
+                        getAutoCmdFromTrajectories(true, "Part1", "Part2", "Part3", "Part4")
+                )
+        );
     }
 
     public @Nullable Command getAutoCmdFromTrajectories(boolean firstTraj, String... trajectoryNames) {
