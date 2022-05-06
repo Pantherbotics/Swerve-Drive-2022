@@ -6,10 +6,9 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.RobotController;
 
 @SuppressWarnings("unused")
-public class Wheel extends SwerveModule{
+public class SwerveModuleProto extends SwerveModule {
     private final SparkMaxPIDController pidController;
 
     //Steering stuff
@@ -25,19 +24,23 @@ public class Wheel extends SwerveModule{
     double sumError = 0, errorChange = 0, lastError = 0;
     double offset;
 
-    //Constructor Run once when drive is turned on.
-    public Wheel(int port, int offset, PID pid) {
+    /**
+     * @param id ID of the module's motors
+     * @param offset Offset degrees of the module
+     * @param pid PID constants for the module steering
+     */
+    public SwerveModuleProto(int id, int offset, PID pid) {
         kP = pid.kP; kI = pid.kI; kD = pid.kD;
 
         this.offset= offset;
         //Drive motor
         //Class Declarations
         //Drive Wheel stuff
-        CANSparkMax m_motor = new CANSparkMax(port, MotorType.kBrushless);
+        CANSparkMax m_motor = new CANSparkMax(id, MotorType.kBrushless);
         m_motor.restoreFactoryDefaults();
         pidController = m_motor.getPIDController();
         // set Drive motor PID coefficients
-        pidController.setP(.0001);//works well for swerve
+        pidController.setP(.0001);
         pidController.setI(0);
         pidController.setD(.0001);
         pidController.setIZone(0);
@@ -45,8 +48,8 @@ public class Wheel extends SwerveModule{
         pidController.setOutputRange(-1, 1);//min and max to motor
 
         //Steering Motor setup
-        steer = new TalonSRX(port);//set in port ())create talon object
-        analogInput = new AnalogInput(port-1);//direction pot
+        steer = new TalonSRX(id);//set in id ())create talon object
+        analogInput = new AnalogInput(id-1);//direction pot
 
         //CRITICAL: Once the CANcoders arrive, we can use the following methods to use them as sensors
         // Inside the TalonSRX for it's PID loops
@@ -60,6 +63,11 @@ public class Wheel extends SwerveModule{
 
     //Setter Run each time wheel is updated.
     private double steerTarget = 0;
+
+    /**
+     * @param speed Percent Output in [-1, 1]
+     * @param target Target Angle in Degrees [0, 360)
+     */
     public void setState(double speed, double target) {
         steerTarget = target;
 
@@ -77,19 +85,17 @@ public class Wheel extends SwerveModule{
     }
 
     /**
-     *
-     * @return  the unbounded steering error, in radians
+     * @return the unbounded steering error, in degrees
      */
     public double getError(double target) {
         double ang = analogInput.getValue(); //analog in on the Rio
         ang = ang*360/potMax + offset + 90; //Convert to compass type heading + offset
-        if(ang > 360) { ang = ang - 360; } //correct for offset overshoot.
+        if (ang > 360) { ang -= 360; } //correct for offset overshoot.
         return target - ang;
     }
 
     /**
-     *
-     * @return  the steering error bounded to [-pi, pi]
+     * @return the steering error bounded to [-180, 180] degrees
      */
     public double getModifiedError(double target){
         return (boundHalfDegrees(getError(target)))/180;

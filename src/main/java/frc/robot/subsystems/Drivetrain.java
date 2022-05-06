@@ -6,17 +6,17 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.DriveMode;
 import frc.robot.util.PID;
-import frc.robot.util.Wheel;
+import frc.robot.util.SwerveModuleProto;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
 @SuppressWarnings("unused")
 public class Drivetrain extends SubsystemBase {
-    public final Wheel leftFront;
-    public final Wheel rightFront;
-    public final Wheel leftBack;
-    public final Wheel rightBack;
+    public final SwerveModuleProto leftFront;
+    public final SwerveModuleProto rightFront;
+    public final SwerveModuleProto leftBack;
+    public final SwerveModuleProto rightBack;
     public DriveMode mode = DriveMode.FO_SWERVE;
 
     private final AHRS gyro = new AHRS(I2C.Port.kOnboard);
@@ -35,10 +35,10 @@ public class Drivetrain extends SubsystemBase {
         PID drivePID = new PID(0.3, 0, 0, 0, 128, 1.0);
         PID steerPID = new PID(0.3, 0, 0, 0, 0, 0.5);
 
-        leftFront  = new Wheel(1,  -80, new PID(0.75, 0, 0));
-        rightFront = new Wheel(2,  155, new PID(0.75, 0, 0));
-        rightBack  = new Wheel(3,    0, new PID(0.75, 0, 0));
-        leftBack   = new Wheel(4, -160, new PID(0.75, 0, 0));
+        leftFront  = new SwerveModuleProto(1,  -80, new PID(0.75, 0, 0));
+        rightFront = new SwerveModuleProto(2,  155, new PID(0.75, 0, 0));
+        rightBack  = new SwerveModuleProto(3,    0, new PID(0.75, 0, 0));
+        leftBack   = new SwerveModuleProto(4, -160, new PID(0.75, 0, 0));
 
         //leftFront  = new SwerveModule(1, 1,  2,  3, 0, drivePID, steerPID);
         //rightFront = new SwerveModule(2, 4,  5,  6, 0, drivePID, steerPID);
