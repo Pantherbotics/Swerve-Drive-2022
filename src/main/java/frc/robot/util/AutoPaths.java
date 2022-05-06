@@ -96,6 +96,18 @@ public class AutoPaths {
                         getAutoCmdFromTrajectories(true, "Part1", "Part2", "Part3", "Part4")
                 )
         );
+
+        paths.add(
+                new NamedCommand(
+                        "Test",
+                        wrapTrajectories(true, TrajectoryGenerator.generateTrajectory(
+                                new Pose2d(2, 4, Rotation2d.fromDegrees(0.0)),
+                                List.of(),
+                                new Pose2d(2, 0, Rotation2d.fromDegrees(90)),
+                                trajectoryConfig
+                        ))
+                )
+        );
     }
 
     public @Nullable Command getAutoCmdFromTrajectories(boolean firstTraj, String... trajectoryNames) {
