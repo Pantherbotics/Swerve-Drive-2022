@@ -28,7 +28,7 @@ public class Drivetrain extends SubsystemBase {
     //The offset Angle that the front left wheel would have to adjust in order to rotate the robot clockwise
     // when driving forwards (positively)
     //This value is shifted for the other wheels automatically.
-    double rotationAngle = 90 - (Math.atan((L/2) / (W/2)) * 180/Math.PI);
+    double rotationAngle = 90 - Math.toDegrees(Math.atan((L/2) / (W/2))); //For square chassis this is 45 degrees
 
     public Drivetrain(){
         //Steering
