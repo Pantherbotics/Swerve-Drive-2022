@@ -6,10 +6,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
-import frc.robot.commands.RunDriveMode;
 import frc.robot.commands.RunTestModule;
 import frc.robot.subsystems.Drivetrain;
-import frc.robot.util.DriveMode;
 
 @SuppressWarnings("unused")
 public class RobotContainer {
@@ -42,10 +40,11 @@ public class RobotContainer {
                 drivetrain.runSwerve(pJoy.getRawAxis(0), -pJoy.getRawAxis(1), pJoy.getRawAxis(4), -pJoy.getRawAxis(5)), drivetrain
         ));
 
-        joyBA.whenPressed(new RunDriveMode(drivetrain, DriveMode.FO_SWERVE));
-        joyBB.whenPressed(new RunDriveMode(drivetrain, DriveMode.SWERVE));
-        joyBX.whenPressed(new RunDriveMode(drivetrain, DriveMode.CAR));
-        joyBY.whenPressed(new RunDriveMode(drivetrain, DriveMode.BOAT));
+        //joyBA.whenPressed(new RunDriveMode(drivetrain, DriveMode.FO_SWERVE));
+        //joyBB.whenPressed(new RunDriveMode(drivetrain, DriveMode.SWERVE));
+        //joyBX.whenPressed(new RunDriveMode(drivetrain, DriveMode.CAR));
+        //joyBY.whenPressed(new RunDriveMode(drivetrain, DriveMode.BOAT));
+        joyBB.whenPressed(drivetrain::zeroGyro); //Can manually calibrate Field-Oriented angle in case it got weird
 
         //Test buttons
         sJoyPOVN.whileHeld(new RunTestModule(drivetrain.leftFront));
