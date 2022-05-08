@@ -1,7 +1,6 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -59,13 +58,9 @@ public class RobotContainer {
         SmartDashboard.putString("Mode", drivetrain.mode.getName());
 
         SmartDashboard.putNumber("InitGyro", drivetrain.initialRotation);
-        SmartDashboard.putNumber("TargetGyro", drivetrain.targetRotation);
         SmartDashboard.putNumber("Gyro", drivetrain.getGyroRot());
 
-        double rotTargetError = drivetrain.targetRotation - drivetrain.getGyroRot();
-        double deltaTargetRot = rotTargetError / 8D;
-        SmartDashboard.putNumber("Rotation Target Error", rotTargetError);
-        SmartDashboard.putNumber("Delta Target Rot", deltaTargetRot);
+        SmartDashboard.putString("Odometry", "X: " + drivetrain.getPose().getX() + " Y: " + drivetrain.getPose().getY());
     }
 
     public double powAxis(double a, double b) {

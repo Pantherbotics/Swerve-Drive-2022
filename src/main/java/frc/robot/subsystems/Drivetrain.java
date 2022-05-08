@@ -3,87 +3,114 @@ package frc.robot.subsystems;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.drive.Vector2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants;
+import frc.robot.Constants.ModuleConstants;
 import frc.robot.util.DriveMode;
+import frc.robot.util.Odometer;
 import frc.robot.util.PID;
 import frc.robot.util.SwerveModuleProto;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import static frc.robot.util.MathUtils.*;
 
 @SuppressWarnings("unused")
 public class Drivetrain extends SubsystemBase {
-    public final SwerveModuleProto leftFront;
-    public final SwerveModuleProto rightFront;
-    public final SwerveModuleProto leftBack;
-    public final SwerveModuleProto rightBack;
+    //Swerve variables
+    public final SwerveModuleProto leftFront, rightFront, leftBack, rightBack;
     public DriveMode mode = DriveMode.FO_SWERVE;
 
+    //Other swerve variables
     private final AHRS gyro = new AHRS(I2C.Port.kOnboard);
-    private final SwerveDriveOdometry odometer = new SwerveDriveOdometry(DriveConstants.DRIVE_KINEMATICS, new Rotation2d(0));
+    private final Odometer odometer = new Odometer();
 
-    double debounce = 0.08; //Joystick debounce if sticks don't rest at 0
-    double W = 18; //Width of the Robot Chassis
-    double L = 18; //Length of the Robot Chassis
-
-    //The offset Angle that the front left wheel would have to adjust in order to rotate the robot clockwise
-    // when driving forwards (positively)
-    //This value is shifted for the other wheels automatically.
-    double rotationAngle = 90 - Math.toDegrees(Math.atan((L/2) / (W/2))); //For square chassis this is 45 degrees
+    //Initial rotation so we can do field-oriented drive
     public double initialRotation = 0;
-
     public Drivetrain(){
-        //Steering
-        PID drivePID = new PID(0.3, 0, 0, 0, 128, 1.0);
-        PID steerPID = new PID(0.3, 0, 0, 0, 0, 0.5);
+        //Create the Swerve module objects
+        PID steerPID = new PID(0.75, 0, 0);
+        leftFront  = new SwerveModuleProto(1,  -80, steerPID);
+        rightFront = new SwerveModuleProto(2,  155, steerPID);
+        rightBack  = new SwerveModuleProto(3,    0, steerPID);
+        leftBack   = new SwerveModuleProto(4, -160, steerPID);
 
-        leftFront  = new SwerveModuleProto(1,  -80, new PID(0.75, 0, 0));
-        rightFront = new SwerveModuleProto(2,  155, new PID(0.75, 0, 0));
-        rightBack  = new SwerveModuleProto(3,    0, new PID(0.75, 0, 0));
-        leftBack   = new SwerveModuleProto(4, -160, new PID(0.75, 0, 0));
-
-        //leftFront  = new SwerveModule(1, 1,  2,  3, 0, drivePID, steerPID);
-        //rightFront = new SwerveModule(2, 4,  5,  6, 0, drivePID, steerPID);
-        //rightBack  = new SwerveModule(3, 7,  8,  9, 0, drivePID, steerPID);
-        //leftBack   = new SwerveModule(4, 10,11, 12, 0, drivePID, steerPID);
-
-        //Zero the gyro (which doesn't set it to 0), so then have the target be the current rotation after 100ms
-        zeroGyro();
-        (new Timer()).schedule(new TimerTask() {
-            @Override
-            public void run() {
-                initialRotation = getGyroRot();
-            }
-        }, 100);
+        //Zero the gyro after a second (to let it calibrate)
+        new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+                zeroGyro();
+            } catch (Exception ignored) {}
+        }).start();
     }
 
+    //Set the drive mode (mainly driving DriveMode.FO_SWERVE)
     public void setMode(DriveMode mode) {
         this.mode = mode;
     }
 
+    //Get the "pose" or current position of the robot from the odometer
     public Pose2d getPose() {
-        return odometer.getPoseMeters();
-        //Pose2d curr = odometer.getPoseMeters();
-        //return new Pose2d(new Translation2d(curr.getX(), -curr.getY()), curr.getRotation());
+        return new Pose2d(odometer.x, odometer.y, Rotation2d.fromDegrees(getGyroRot()));
     }
 
+    //Set the odometer to a specified position
     public void resetOdometry(Pose2d pose) {
-        DriverStation.reportWarning(pose.toString(), false);
-        odometer.resetPosition(pose, Rotation2d.fromDegrees(getGyroRot()));
+        DriverStation.reportWarning("Set Odometry: " + pose, false);
+        odometer.resetPosition(pose);
     }
+
+    //Update the odometry by calculating the current wheel vectors, the overall odometry vector, then the amount of movement
+    private double prevTimeSeconds = -1;
+    public void updateOdometry() {
+        //Speeds of the wheels [-maxDriveVel, maxDriveVel]
+        double s1 = leftFront.getDriveVel();
+        double s2 = rightFront.getDriveVel();
+        double s3 = rightBack.getDriveVel();
+        double s4 = leftBack.getDriveVel();
+        //Angles of the wheels [0, 360)
+        double a1 = leftFront.getAngle();
+        double a2 = rightFront.getAngle();
+        double a3 = rightBack.getAngle();
+        double a4 = leftBack.getAngle();
+        //The vector components of the wheels, based on their current values
+        double X1 = getHeadingX(a1) * s1;
+        double Y1 = getHeadingY(a1) * s1;
+        double X2 = getHeadingX(a2) * s2;
+        double Y2 = getHeadingY(a2) * s2;
+        double X3 = getHeadingX(a3) * s3;
+        double Y3 = getHeadingY(a3) * s3;
+        double X4 = getHeadingX(a4) * s4;
+        double Y4 = getHeadingY(a4) * s4;
+
+        //Calculate the odometry vector components [-maxDriveVel, maxDriveVel]
+        double oX = (X1 + X2 + X3 + X4) / 4D;
+        double oY = (Y1 + Y2 + Y3 + Y4) / 4D;
+        //double oHeading = getHeading(oX, oY);
+        //double oSpeed = Math.sqrt(oX*oX + oY*oY);
+        //oX = getHeadingX(oHeading+odoR) * oSpeed;
+        //oY = getHeadingY(oHeading+odoR) * oSpeed;
+
+        //Calculate the period in seconds since last update
+        double currTimeSec = WPIUtilJNI.now() * 1.0e-6;
+        double period = prevTimeSeconds >= 0 ? currTimeSec - prevTimeSeconds : 0.0; prevTimeSeconds = currTimeSec;
+
+        //oX * DRIVE_VEL_TO_METERS_PER_SECOND is the distance traveled in meters in a second, then multiplied by the period
+        double changeX = oX * ModuleConstants.DRIVE_ENCODER_RPM_2_METER_PER_SEC * period;
+        double changeY = oY * ModuleConstants.DRIVE_ENCODER_RPM_2_METER_PER_SEC * period;
+        odometer.update(changeX, changeY);
+    }
+
 
     public void runSwerve(double XL, double YL, double XR, double YR) {
-        //TODO update odometry
+        //Update the odometer
+        updateOdometry();
 
         //Add small debounces
-        XL = (Math.abs(XL) <= debounce) ? 0 : XL; YL = (Math.abs(YL) <= debounce) ? 0 : YL;
-        XR = (Math.abs(XR) <= debounce) ? 0 : XR; YR = (Math.abs(YR) <= debounce) ? 0 : YR;
+        XL = (Math.abs(XL) <= Constants.joyDebounce) ? 0 : XL; YL = (Math.abs(YL) <= Constants.joyDebounce) ? 0 : YL;
+        XR = (Math.abs(XR) <= Constants.joyDebounce) ? 0 : XR; YR = (Math.abs(YR) <= Constants.joyDebounce) ? 0 : YR;
 
         SmartDashboard.putString("Data0", "XL: " + XL + " YL: " + YL + " XR: " + XR + " YR: " + YR);
 
@@ -103,8 +130,8 @@ public class Drivetrain extends SubsystemBase {
             //  3 is Right Back
             //  4 is Left Back
             //To understand the vector addition look here: https://imgur.com/a/iMfg07P
-            double xr = XR * (Math.cos(rotationAngle) / 2D); //For Square Chassis at 45 degrees this is ~0.707/2D
-            double yr = XR * (Math.sin(rotationAngle) / 2D); //For Square Chassis at 45 degrees this is ~0.707/2D
+            double xr = XR * (Math.cos(Constants.rotationAngle) / 2D); //For Square Chassis at 45 degrees this is ~0.707/2D
+            double yr = XR * (Math.sin(Constants.rotationAngle) / 2D); //For Square Chassis at 45 degrees this is ~0.707/2D
 
             //Rotation Stabilization (NOT WORKING)
             //double xr = (Math.abs(deltaTargetRot)/22.5) * (Math.cos(Math.abs(deltaTargetRot)) / 2D); //For Square Chassis at 45 degrees this is ~0.707/2D
@@ -172,66 +199,6 @@ public class Drivetrain extends SubsystemBase {
             rightBack.setState(speed,-TargetAng);
             leftBack.setState(speed, -TargetAng);
         }
-    }
-
-    //I spent like half an hour figuring this out, don't try to figure it out just appreciate the results :)
-    //0 Degrees is straight forward, 90 degrees is to the right, 180 degrees is backwards, 270 degrees is to the left
-    // Aka clockwise degrees and 0 is straight forward on the joystick :)
-    private double getHeading(double x, double y) {
-        if (x == 0 && y == 0) { return 0; }
-
-        double angle = (360 - ((Math.atan2(y, x)*180/Math.PI) + 180)) - 90;
-        if (angle < 0) {
-            angle = 270 + (90 - Math.abs(angle));
-        }
-        return angle;
-    }
-
-    //Used to re-obtain the X value from an angle using the custom getHeading()
-    private double getHeadingX(double angle) {
-        //Ensure values are [0, 360)
-        while (angle > 360) { angle -= 360; }
-        while (angle < 0) { angle += 360; }
-
-        if (angle >= 0 && angle <= 90) {
-            return Math.cos(Math.toRadians(90 - angle));
-        }else if (angle >= 90 && angle <= 270) {
-            return Math.cos(-Math.toRadians(angle - 90));
-        }else if (angle >= 270 && angle <= 360) {
-            return -Math.cos(Math.toRadians(270 - angle));
-        }
-        return 0;
-    }
-    //Used to re-obtain the Y value from an angle using the custom getHeading()
-    private double getHeadingY(double angle) {
-        //Ensure values are [0, 360)
-        while (angle > 360) { angle -= 360; }
-        while (angle < 0) { angle += 360; }
-
-        if (angle >= 0 && angle <= 90) {
-            return Math.sin(Math.toRadians(90 - angle));
-        }else if (angle >= 90 && angle <= 270) {
-            return Math.sin(-Math.toRadians(angle - 90));
-        }else if (angle >= 270 && angle <= 360) {
-            return -Math.sin(Math.toRadians(270 - angle));
-        }
-        return 0;
-    }
-
-    /**
-     * Returns a speed value from [-1, 1] based on joystick X and Y inputs
-     * More critically it's snapped to the unit circle so X=1 Y=1 won't be sqrt(2)
-     * @param X the X of a coordinate [-1, 1]
-     * @param Y the Y of a coordinate [-1, 1]
-     */
-    public double getJoystickSpeed(double X, double Y) {
-        Vector2d vector = new Vector2d(X, Y);
-
-        double angle = Math.atan2(vector.x, vector.y);
-        double maxMagnitude = Math.abs(vector.x) > Math.abs(vector.y)
-                ? 1 / Math.sin(angle)
-                : 1 / Math.cos(angle);
-        return Math.abs(vector.magnitude() / maxMagnitude);
     }
 
     //Gyroscope

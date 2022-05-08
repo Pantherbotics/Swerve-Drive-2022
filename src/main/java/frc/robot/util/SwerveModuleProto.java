@@ -6,9 +6,12 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.wpilibj.AnalogInput;
+import frc.robot.Constants;
 
 @SuppressWarnings("unused")
 public class SwerveModuleProto extends SwerveModule {
+    //Drive stuff
+    private final CANSparkMax drive;
     private final SparkMaxPIDController pidController;
 
     //Steering stuff
@@ -16,7 +19,6 @@ public class SwerveModuleProto extends SwerveModule {
     private final AnalogInput analogInput;
 
     //Variable declarations
-    double maxRPM = 4000;
     double kP;
     double kI;
     double kD;
@@ -36,9 +38,9 @@ public class SwerveModuleProto extends SwerveModule {
         //Drive motor
         //Class Declarations
         //Drive Wheel stuff
-        CANSparkMax m_motor = new CANSparkMax(id, MotorType.kBrushless);
-        m_motor.restoreFactoryDefaults();
-        pidController = m_motor.getPIDController();
+        drive = new CANSparkMax(id, MotorType.kBrushless);
+        drive.restoreFactoryDefaults();
+        pidController = drive.getPIDController();
         // set Drive motor PID coefficients
         pidController.setP(.0001);
         pidController.setI(0);
@@ -61,6 +63,10 @@ public class SwerveModuleProto extends SwerveModule {
         // RobotController.getVoltage5V(); //Helpful to interpret analog inputs when source is not 5V
     }
 
+    public double getDriveVel() {
+        return drive.getEncoder().getVelocity();
+    }
+
     //Setter Run each time wheel is updated.
     private double steerTarget = 0;
 
@@ -80,18 +86,25 @@ public class SwerveModuleProto extends SwerveModule {
         lastError = error;
 
         //Drive Speed with spark
-        speed = speed*maxRPM; //joystick sets speed 0->1.
+        speed = speed * Constants.maxDriveVel; //joystick sets speed 0->1.
         pidController.setReference(speed, CANSparkMax.ControlType.kVelocity);
+    }
+
+    /**
+     * @return the current angle of the module's wheel
+     */
+    public double getAngle() {
+        double ang = analogInput.getValue(); //analog in on the Rio
+        ang = ang*360/potMax + offset + 90; //Convert to compass type heading + offset
+        if (ang > 360) { ang -= 360; } //correct for offset overshoot.
+        return ang;
     }
 
     /**
      * @return the unbounded steering error, in degrees
      */
     public double getError(double target) {
-        double ang = analogInput.getValue(); //analog in on the Rio
-        ang = ang*360/potMax + offset + 90; //Convert to compass type heading + offset
-        if (ang > 360) { ang -= 360; } //correct for offset overshoot.
-        return target - ang;
+        return target - getAngle();
     }
 
     /**
