@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.drive.Vector2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.DriveMode;
@@ -88,7 +89,7 @@ public class Drivetrain extends SubsystemBase {
             //Left Joystick Angle (0 is forwards, 90 is to the right, and 180 is backwards, etc.)
             double joyHeading = getHeading(XL, YL);
             SmartDashboard.putNumber("Heading", joyHeading);
-            double speed = getSpeed(XL, YL); //[-1, 1] of the speed of the left joystick
+            double speed = getJoystickSpeed(XL, YL); //[-1, 1] of the speed of the left joystick
 
             //These two variables are for the wheel rotation adjustment for spinning while driving (stabilized rotation)
             double rotTargetError = targetRotation - getGyroRot(); //Should be +-[0, 360)
@@ -225,11 +226,14 @@ public class Drivetrain extends SubsystemBase {
      * @param X the X of a coordinate [-1, 1]
      * @param Y the Y of a coordinate [-1, 1]
      */
-    public double getSpeed(double X, double Y) {
-        double angle = getHeading(X, Y);
-        double x = getHeadingX(angle) * X;
-        double y = getHeadingY(angle) * Y;
-        return Math.sqrt(x*x + y*y);
+    public double getJoystickSpeed(double X, double Y) {
+        Vector2d vector = new Vector2d(X, Y);
+
+        double angle = Math.atan2(vector.x, vector.y);
+        double maxMagnitude = Math.abs(vector.x) > Math.abs(vector.y)
+                ? 1 / Math.sin(angle)
+                : 1 / Math.cos(angle);
+        return Math.abs(vector.magnitude() / maxMagnitude);
     }
 
     //Gyroscope
