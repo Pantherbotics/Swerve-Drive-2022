@@ -222,13 +222,13 @@ public class Drivetrain extends SubsystemBase {
     /**
      * Returns a speed value from [-1, 1] based on joystick X and Y inputs
      * More critically it's snapped to the unit circle so X=1 Y=1 won't be sqrt(2)
-     * @param X the X of a coordinate
-     * @param Y the Y of a coordinate
+     * @param X the X of a coordinate [-1, 1]
+     * @param Y the Y of a coordinate [-1, 1]
      */
     public double getSpeed(double X, double Y) {
         double angle = getHeading(X, Y);
-        double x = getHeadingX(angle);
-        double y = getHeadingY(angle);
+        double x = getHeadingX(angle) * X;
+        double y = getHeadingY(angle) * Y;
         return Math.sqrt(x*x + y*y);
     }
 
