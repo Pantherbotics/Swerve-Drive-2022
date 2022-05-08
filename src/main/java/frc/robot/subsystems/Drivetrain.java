@@ -227,8 +227,8 @@ public class Drivetrain extends SubsystemBase {
      */
     public double getSpeed(double X, double Y) {
         double angle = getHeading(X, Y);
-        double x = getHeadingX(angle) * X;
-        double y = getHeadingY(angle) * Y;
+        double x = getHeadingX(angle);
+        double y = getHeadingY(angle);
         return Math.sqrt(x*x + y*y);
     }
 
