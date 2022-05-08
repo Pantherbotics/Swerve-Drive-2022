@@ -88,7 +88,7 @@ public class Drivetrain extends SubsystemBase {
             //Left Joystick Angle (0 is forwards, 90 is to the right, and 180 is backwards, etc.)
             double joyHeading = getHeading(XL, YL);
             SmartDashboard.putNumber("Heading", joyHeading);
-            double speed = (Math.sqrt(XL*XL + YL*YL)) / 1.41421356; // [-1, 1] of the speed of the left joystick
+            double speed = getSpeed(XL, YL); //[-1, 1] of the speed of the left joystick
 
             //These two variables are for the wheel rotation adjustment for spinning while driving (stabilized rotation)
             double rotTargetError = targetRotation - getGyroRot(); //Should be +-[0, 360)
@@ -217,6 +217,19 @@ public class Drivetrain extends SubsystemBase {
             return -Math.sin(Math.toRadians(270 - angle));
         }
         return 0;
+    }
+
+    /**
+     * Returns a speed value from [-1, 1] based on joystick X and Y inputs
+     * More critically it's snapped to the unit circle so X=1 Y=1 won't be sqrt(2)
+     * @param X the X of a coordinate
+     * @param Y the Y of a coordinate
+     */
+    public double getSpeed(double X, double Y) {
+        double angle = getHeading(X, Y);
+        double x = getHeadingX(angle) * X;
+        double y = getHeadingY(angle) * Y;
+        return Math.sqrt(x*x + y*y);
     }
 
     //Gyroscope
