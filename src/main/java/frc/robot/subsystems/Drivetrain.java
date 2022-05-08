@@ -1,10 +1,15 @@
 package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.drive.Vector2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.util.DriveMode;
 import frc.robot.util.PID;
 import frc.robot.util.SwerveModuleProto;
@@ -21,6 +26,7 @@ public class Drivetrain extends SubsystemBase {
     public DriveMode mode = DriveMode.FO_SWERVE;
 
     private final AHRS gyro = new AHRS(I2C.Port.kOnboard);
+    private final SwerveDriveOdometry odometer = new SwerveDriveOdometry(DriveConstants.DRIVE_KINEMATICS, new Rotation2d(0));
 
     double debounce = 0.08; //Joystick debounce if sticks don't rest at 0
     double W = 18; //Width of the Robot Chassis
@@ -30,6 +36,7 @@ public class Drivetrain extends SubsystemBase {
     // when driving forwards (positively)
     //This value is shifted for the other wheels automatically.
     double rotationAngle = 90 - Math.toDegrees(Math.atan((L/2) / (W/2))); //For square chassis this is 45 degrees
+    public double initialRotation = 0;
 
     public Drivetrain(){
         //Steering
@@ -51,9 +58,7 @@ public class Drivetrain extends SubsystemBase {
         (new Timer()).schedule(new TimerTask() {
             @Override
             public void run() {
-                double initial = getGyroRot();
-                setTargetRotation(initial);
-                initialRotation = initial;
+                initialRotation = getGyroRot();
             }
         }, 100);
     }
@@ -62,38 +67,31 @@ public class Drivetrain extends SubsystemBase {
         this.mode = mode;
     }
 
-    public double targetRotation = 0;
-    public double initialRotation = 0;
-    public void setTargetRotation(double targetRotation) {
-        this.targetRotation = targetRotation;
+    public Pose2d getPose() {
+        return odometer.getPoseMeters();
+        //Pose2d curr = odometer.getPoseMeters();
+        //return new Pose2d(new Translation2d(curr.getX(), -curr.getY()), curr.getRotation());
     }
 
-    boolean justTurned = false;
+    public void resetOdometry(Pose2d pose) {
+        DriverStation.reportWarning(pose.toString(), false);
+        odometer.resetPosition(pose, Rotation2d.fromDegrees(getGyroRot()));
+    }
+
     public void runSwerve(double XL, double YL, double XR, double YR) {
+        //TODO update odometry
+
         //Add small debounces
         XL = (Math.abs(XL) <= debounce) ? 0 : XL; YL = (Math.abs(YL) <= debounce) ? 0 : YL;
         XR = (Math.abs(XR) <= debounce) ? 0 : XR; YR = (Math.abs(YR) <= debounce) ? 0 : YR;
 
         SmartDashboard.putString("Data0", "XL: " + XL + " YL: " + YL + " XR: " + XR + " YR: " + YR);
 
-        //Code which can be used in the future when we implement rotation stabilization
-        if (Math.abs(XR) >= debounce) {
-            justTurned = true;
-            targetRotation += XR;
-        }else if (justTurned) {
-            justTurned = false;
-            setTargetRotation(getGyroRot());
-        }
-
         if (mode == DriveMode.FO_SWERVE) {
             //Left Joystick Angle (0 is forwards, 90 is to the right, and 180 is backwards, etc.)
             double joyHeading = getHeading(XL, YL);
             SmartDashboard.putNumber("Heading", joyHeading);
             double speed = getJoystickSpeed(XL, YL); //[-1, 1] of the speed of the left joystick
-
-            //These two variables are for the wheel rotation adjustment for spinning while driving (stabilized rotation)
-            double rotTargetError = targetRotation - getGyroRot(); //Should be +-[0, 360)
-            double deltaTargetRot = rotTargetError / 8D; //Should be +-[0, 45)
 
             //This variable is for wheel joyHeading (Field-Oriented) if we are driving straight (no turning)
             double rotFromInitial = initialRotation - getGyroRot(); //Should be +-[0, 360)
