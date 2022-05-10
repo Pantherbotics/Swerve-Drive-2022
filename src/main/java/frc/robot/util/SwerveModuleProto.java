@@ -1,12 +1,16 @@
 package frc.robot.util;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.TalonSRXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.sensors.AbsoluteSensorRange;
+import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.wpilibj.AnalogInput;
 import frc.robot.Constants;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class SwerveModuleProto extends SwerveModule {
@@ -16,7 +20,8 @@ public class SwerveModuleProto extends SwerveModule {
 
     //Steering stuff
     private final TalonSRX steer;
-    private final AnalogInput analogInput;
+    @Nullable private final AnalogInput analogInput;
+    @Nullable private final CANCoder canCoder;
 
     //Variable declarations
     double kP;
@@ -24,17 +29,17 @@ public class SwerveModuleProto extends SwerveModule {
     double kD;
     double potMax = 3798;
     double sumError = 0, errorChange = 0, lastError = 0;
-    double offset;
+    double offsetDeg;
 
     /**
      * @param id ID of the module's motors
-     * @param offset Offset degrees of the module
+     * @param offsetDeg Offset degrees of the module
      * @param pid PID constants for the module steering
      */
-    public SwerveModuleProto(int id, int offset, PID pid) {
+    public SwerveModuleProto(int id, int offsetDeg, PID pid) {
         kP = pid.kP; kI = pid.kI; kD = pid.kD;
 
-        this.offset= offset;
+        this.offsetDeg = offsetDeg;
         //Drive motor
         //Class Declarations
         //Drive Wheel stuff
@@ -51,7 +56,24 @@ public class SwerveModuleProto extends SwerveModule {
 
         //Steering Motor setup
         steer = new TalonSRX(id);//set in id ())create talon object
-        analogInput = new AnalogInput(id-1);//direction pot
+
+        if (Constants.kEncoderType == Constants.EncoderType.CanCoder) {
+            canCoder = new CANCoder(id + 4);
+            canCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+            canCoder.setPositionToAbsolute();
+            steer.configRemoteFeedbackFilter(canCoder, 0);
+            steer.configSelectedFeedbackSensor(TalonSRXFeedbackDevice.RemoteSensor0, 0, 20);
+            steer.config_kP(0, 0.2);
+            steer.config_kI(0, 0.0);
+            steer.config_kD(0, 0.0);
+            steer.config_kF(0, 0.0);
+
+            analogInput = null;
+        }else {
+            analogInput = new AnalogInput(id - 1);
+            canCoder = null;
+        }
+
 
         //CRITICAL: Once the CANcoders arrive, we can use the following methods to use them as sensors
         // Inside the TalonSRX for it's PID loops
@@ -78,12 +100,16 @@ public class SwerveModuleProto extends SwerveModule {
         steerTarget = target;
 
         //Custom PID loop
-        double error = getModifiedError(target);
-        sumError += error * 0.02;
-        errorChange = (error-lastError)/0.02;
-        double pidOutput = error * kP + kI * sumError + kD * errorChange;
-        steer.set(ControlMode.PercentOutput, pidOutput);
-        lastError = error;
+        if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
+            canCoder.setPosition(target + offsetDeg);
+        }else {
+            double error = getModifiedError(target);
+            sumError += error * 0.02;
+            errorChange = (error-lastError)/0.02;
+            double pidOutput = error * kP + kI * sumError + kD * errorChange;
+            steer.set(ControlMode.PercentOutput, pidOutput);
+            lastError = error;
+        }
 
         //Drive Speed with spark
         speed = speed * Constants.maxDriveVel; //joystick sets speed 0->1.
@@ -94,10 +120,15 @@ public class SwerveModuleProto extends SwerveModule {
      * @return the current angle of the module's wheel
      */
     public double getAngle() {
-        double ang = analogInput.getValue(); //analog in on the Rio
-        ang = ang*360/potMax + offset + 90; //Convert to compass type heading + offset
-        if (ang > 360) { ang -= 360; } //correct for offset overshoot.
-        return ang;
+        if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
+            return canCoder.getAbsolutePosition() + offsetDeg;
+        }else if (analogInput != null) {
+            double ang = analogInput.getValue(); //analog in on the Rio
+            ang = ang*360/potMax + offsetDeg + 90; //Convert to compass type heading + offset
+            if (ang > 360) { ang -= 360; } //correct for offset overshoot.
+            return ang;
+        }
+        return 0;
     }
 
     /**

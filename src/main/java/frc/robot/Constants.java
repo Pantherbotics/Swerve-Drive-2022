@@ -4,12 +4,23 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "HungarianNotation"})
 public class Constants {
+    public enum EncoderType {
+        Potentiometer, CanCoder
+    }
+
     //Joysticks
     public static final int pJoyID = 0;
     public static final double joyDebounce = 0.08;
 
+    /**
+     * The encoder type we are using for the swerve
+     * Options: CanCoder, Potentiometer
+     */
+    public static final EncoderType kEncoderType = EncoderType.CanCoder;
+    //If using the Potentiometer, this specifies its max value so we can get the angle
+    public static final double potMax = 3798;
 
     //Drivetrain
     private static final double W = 18; //Width of the Robot Chassis
