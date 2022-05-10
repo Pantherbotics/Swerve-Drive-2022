@@ -153,7 +153,7 @@ public class SwerveModuleProto {
     //Returns angle in nobody knows
     public double getAbsoluteEncoderRad() {
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
-            return Math.toRadians(canCoder.getAbsolutePosition());
+            return Math.toRadians(canCoder.getAbsolutePosition() + offsetDeg);
         }else if (analogInput != null) { //It's a Potentiometer
             double angle = analogInput.getValue() / Constants.potMax;
             angle *= (2.0 * Math.PI);
