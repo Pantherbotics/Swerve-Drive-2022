@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
@@ -13,7 +14,7 @@ public class SwerveModuleSDS {
     //Motors & Encoders
     private final WPI_TalonFX steer;
     private final WPI_TalonFX drive;
-    private final CANCoder encoder;
+    private final CANCoder canCoder;
 
     //Swerve Module Variables
     public final double angleOffset;
@@ -26,8 +27,15 @@ public class SwerveModuleSDS {
         this.angleOffset = angleOffset;
         steer = PID.setupFalcon(steerID, false, steerPID, 0, 30);
         drive = PID.setupFalcon(driveID, false, drivePID, 0, 30);
-        encoder = new CANCoder(canCoderID);
-        encoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360); //Sets range to [0, 360)
+        canCoder = new CANCoder(canCoderID);
+        canCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360); //Sets range to [0, 360)
+        steer.configRemoteFeedbackFilter(canCoder, 0);
+        steer.configSelectedFeedbackSensor(TalonFXFeedbackDevice.RemoteSensor0, 0, 20);
+        steer.config_kP(0, 0.2);
+        steer.config_kI(0, 0.0);
+        steer.config_kD(0, 0.0);
+        steer.config_kF(0, 0.0);
+
 
         //Run Every 100ms to update the Dashboard
         new Notifier(() -> SmartDashboard.putNumber("SwerveModule" + id + " Angle", getAngle())).startPeriodic(100D/1000D);
@@ -42,7 +50,7 @@ public class SwerveModuleSDS {
     /**
         * Setter Run each time wheel is updated.
         * @param velocity: target speed of the wheel in [-1, 1]
-        * @param angle: target angle of the wheel in degrees (handles any angle, >360, <0)
+        * @param angle: target angle of the wheel in degrees [0, 360) (can handle any angle, >360, <0)
         */
     //This may require edge case handling but for now I believe it will work (given inputs are in range)
     public void updateModule(double velocity, double angle) {
@@ -50,16 +58,13 @@ public class SwerveModuleSDS {
         while (angle > 360) { angle -= 360; }
         while (angle < 0) { angle += 360; }
 
-        double currAngle = getAngle();
-        double error = getShortestError(angle, currAngle);
-        double deltaSteerPos = error * Constants.angleGearRatio * 2048;
-        steer.set(ControlMode.Position, steer.getSelectedSensorPosition() + deltaSteerPos);
+        steer.set(ControlMode.Position, angle + angleOffset);
         drive.set(ControlMode.Velocity, velocity * velFactor);
     }
 
     private double getAngle() {
         //Conveniently returns angle in degrees [0, 360)
-        return encoder.getAbsolutePosition() + angleOffset;
+        return canCoder.getAbsolutePosition() + angleOffset;
     }
 
     private double getShortestError(double target, double current) {

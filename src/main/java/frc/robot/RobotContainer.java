@@ -66,9 +66,9 @@ public class RobotContainer {
 
     public void updateSmartDashboard() {
         SmartDashboard.putNumber("Gyro", drivetrain.getHeading());
-        SmartDashboard.putNumber("S1 A", drivetrain.leftFront.getAbsoluteEncoderRad());
-        SmartDashboard.putNumber("S2 A", drivetrain.rightFront.getAbsoluteEncoderRad());
-        SmartDashboard.putNumber("S3 A", drivetrain.rightBack.getAbsoluteEncoderRad());
-        SmartDashboard.putNumber("S4 A", drivetrain.leftBack.getAbsoluteEncoderRad());
+        SmartDashboard.putNumber("Swerve[1] Angle", Math.toDegrees(drivetrain.leftFront.getAbsoluteEncoderRad()));
+        SmartDashboard.putNumber("Swerve[2] Angle", Math.toDegrees(drivetrain.rightFront.getAbsoluteEncoderRad()));
+        SmartDashboard.putNumber("Swerve[3] Angle", Math.toDegrees(drivetrain.rightBack.getAbsoluteEncoderRad()));
+        SmartDashboard.putNumber("Swerve[4] Angle", Math.toDegrees(drivetrain.leftBack.getAbsoluteEncoderRad()));
     }
 }

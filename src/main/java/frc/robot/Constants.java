@@ -7,11 +7,22 @@ import edu.wpi.first.math.util.Units;
 
 @SuppressWarnings({"unused"})
 public class Constants {
+    public enum EncoderType {
+        Potentiometer, CanCoder
+    }
     //--------------------------------------------------------------------------------------------
     //      Notes:
     //-If we get new wheels, edit kWheelDiameterMeters
     //--------------------------------------------------------------------------------------------
 
+    /**
+     * The encoder type we are using for the swerve
+     * Options: CanCoder, Potentiometer
+     */
+    public static final EncoderType kEncoderType = EncoderType.CanCoder;
+    //If using the Potentiometer, this specifies its max value so we can get the angle
+    public static final double potMax = 3798;
+    
 
     //Joysticks
     public static final int pJoyID = 0;

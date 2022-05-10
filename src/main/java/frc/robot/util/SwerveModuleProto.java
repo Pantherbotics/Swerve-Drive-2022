@@ -1,55 +1,73 @@
 package frc.robot.util;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.TalonSRXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.sensors.AbsoluteSensorRange;
+import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.ModuleConstants;
+import org.jetbrains.annotations.Nullable;
 
 //Units of everything were checked and verified as of May 1st, 2022
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class SwerveModuleProto {
     private final int id;
     private final CANSparkMax drive;
-    private final TalonSRX steer;
-
     private final RelativeEncoder driveEncoder;
-
     private final SparkMaxPIDController drivePID;
-    private final PIDController steerPID;
-    private final AnalogInput analogInput;
-    private final double offset; //In Degrees
 
-    private final double potMax = 3798;
+    private final TalonSRX steer;
+    @Nullable private final PIDController steerPID;
+    @Nullable private final AnalogInput analogInput; //Encoder for Potentiometers
+    @Nullable private final CANCoder canCoder; //CanCoder
+
+    private final double offsetDeg;
 
     /**
      * @param id The id of the motors
-     * @param offset The angle offset of the module in radians
+     * @param offsetDeg The angle offset of the module in degrees
      */
-    public SwerveModuleProto(int id, double offset) {
+    public SwerveModuleProto(int id, double offsetDeg) {
         this.id = id;
-        this.offset = offset;
-        analogInput = new AnalogInput(id - 1);
+        this.offsetDeg = offsetDeg;
 
-        drive = new CANSparkMax(id, MotorType.kBrushless); drive.restoreFactoryDefaults();
         steer = new TalonSRX(id);
 
+        if (Constants.kEncoderType == Constants.EncoderType.CanCoder) {
+            canCoder = new CANCoder(id + 4);
+            canCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+            canCoder.setPositionToAbsolute();
+            steer.configRemoteFeedbackFilter(canCoder, 0);
+            steer.configSelectedFeedbackSensor(TalonSRXFeedbackDevice.RemoteSensor0, 0, 20);
+            steer.config_kP(0, 0.2);
+            steer.config_kI(0, 0.0);
+            steer.config_kD(0, 0.0);
+            steer.config_kF(0, 0.0);
+
+            steerPID = null;
+            analogInput = null;
+        }else {
+            analogInput = new AnalogInput(id - 1);
+            steerPID = new PIDController(ModuleConstants.kPTurning, ModuleConstants.kITurning, ModuleConstants.kDTurning);
+            steerPID.enableContinuousInput(-Math.PI, Math.PI);
+            canCoder = null;
+        }
+
+        drive = new CANSparkMax(id, MotorType.kBrushless); drive.restoreFactoryDefaults();
         driveEncoder = drive.getEncoder();
         driveEncoder.setPositionConversionFactor(ModuleConstants.kDriveEncoderRot2Meter);
         driveEncoder.setVelocityConversionFactor(ModuleConstants.kDriveEncoderRPM2MeterPerSec);
-
-        steerPID = new PIDController(ModuleConstants.kPTurning, ModuleConstants.kITurning, ModuleConstants.kDTurning);
-        steerPID.enableContinuousInput(-Math.PI, Math.PI);
 
         drivePID = drive.getPIDController();
         drivePID.setP(.0001); //works well for swerve
@@ -104,7 +122,11 @@ public class SwerveModuleProto {
         //If we want velocity PID control, this line will work instead:
         //drivePID.setReference(state.speedMetersPerSecond*60D, CANSparkMax.ControlType.kVelocity);
         drive.set(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
-        steer.set(ControlMode.PercentOutput, steerPID.calculate(getAbsoluteEncoderRad(), state.angle.getRadians()));
+        if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
+            canCoder.setPosition(Math.toDegrees(state.angle.getRadians()) + offsetDeg);
+        }else if (steerPID != null) {
+            steer.set(ControlMode.PercentOutput, steerPID.calculate(getAbsoluteEncoderRad(), state.angle.getRadians()));
+        }
     }
 
     public void setDesiredStateAuto(SwerveModuleState state) {
@@ -116,7 +138,11 @@ public class SwerveModuleProto {
         //If we want velocity PID control, this line will work instead:
         //drivePID.setReference(state.speedMetersPerSecond*60D, CANSparkMax.ControlType.kVelocity);
         drive.set(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
-        steer.set(ControlMode.PercentOutput, steerPID.calculate(getAbsoluteEncoderRad(), state.angle.getRadians()));
+        if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
+            canCoder.setPosition(Math.toDegrees(state.angle.getRadians()));
+        }else if (steerPID != null) {
+            steer.set(ControlMode.PercentOutput, steerPID.calculate(getAbsoluteEncoderRad(), state.angle.getRadians()));
+        }
     }
 
     public void stop() {
@@ -126,12 +152,17 @@ public class SwerveModuleProto {
 
     //Returns angle in nobody knows
     public double getAbsoluteEncoderRad() {
-        double angle = analogInput.getValue() / potMax;
-        angle *= (2.0 * Math.PI);
-        angle -= Math.PI; //Convert from [0, 2pi] to [-pi, pi]
-        angle -= Math.toRadians(offset);
-        while (angle > Math.PI) { angle -= 2 * Math.PI; }
-        while (angle < -Math.PI) { angle += 2 * Math.PI; }
-        return angle;
+        if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
+            return Math.toRadians(canCoder.getAbsolutePosition());
+        }else if (analogInput != null) { //It's a Potentiometer
+            double angle = analogInput.getValue() / Constants.potMax;
+            angle *= (2.0 * Math.PI);
+            angle -= Math.PI; //Convert from [0, 2pi] to [-pi, pi]
+            angle -= Math.toRadians(offsetDeg);
+            while (angle > Math.PI) { angle -= 2 * Math.PI; }
+            while (angle < -Math.PI) { angle += 2 * Math.PI; }
+            return angle;
+        }
+        return 0;
     }
 }
