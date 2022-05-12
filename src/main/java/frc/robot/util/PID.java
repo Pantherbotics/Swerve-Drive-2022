@@ -34,6 +34,15 @@ public class PID {
         this.maxPower = 1;
     }
 
+    public PID(double kP, double kI, double kD, double kF) {
+        this.kP = kP;
+        this.kI = kI;
+        this.kD = kD;
+        this.kF = kF;
+        this.allowedError = 0;
+        this.maxPower = 1;
+    }
+
 
     /**
      * @param id The CAN id of the TalonFX.

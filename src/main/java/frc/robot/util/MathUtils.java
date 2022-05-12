@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import edu.wpi.first.wpilibj.drive.Vector2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -41,9 +42,9 @@ public class MathUtils {
 	public static double getHeading(double x, double y) {
 		if (x == 0 && y == 0) { return 0; }
 
-		double angle = (360 - ((Math.atan2(y, x)*180/Math.PI) + 180)) - 90;
-		if (angle < 0) {
-			angle = 270 + (90 - Math.abs(angle));
+		double angle = (360D - ((Math.atan2(y, x)*180D/Math.PI) + 180D)) - 90D;
+		if (angle < 0D) {
+			angle = 270D + (90D - Math.abs(angle));
 		}
 		return angle;
 	}
@@ -117,5 +118,15 @@ public class MathUtils {
 				? 1 / Math.sin(angle)
 				: 1 / Math.cos(angle);
 		return Math.abs(vector.magnitude() / maxMagnitude);
+	}
+
+	/**
+	 * Returns the angle given but restricted to [0, 360)
+	 * @param angle the angle to restrict
+	 */
+	public static double restrictAngle(double angle) {
+		while (angle > 360) { angle -= 360; }
+		while (angle < 0) { angle += 360; }
+		return angle;
 	}
 }

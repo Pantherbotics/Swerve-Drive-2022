@@ -12,7 +12,7 @@ public class Constants {
 
     //Joysticks
     public static final int pJoyID = 0;
-    public static final double joyDebounce = 0.08;
+    public static final double joyDebounce = 0.0; //0.08;
 
     /**
      * The encoder type we are using for the swerve

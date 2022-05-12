@@ -31,11 +31,12 @@ public class Drivetrain extends SubsystemBase {
     public double initialRotation = 0;
     public Drivetrain(){
         //Create the Swerve module objects
-        PID steerPID = new PID(0.75, 0, 0);
-        leftFront  = new SwerveModuleProto(1,  -80, steerPID);
-        rightFront = new SwerveModuleProto(2,  155, steerPID);
-        rightBack  = new SwerveModuleProto(3,    0, steerPID);
-        leftBack   = new SwerveModuleProto(4, -160, steerPID);
+        PID steerPID = new PID(1.0, 0.0005, 0);
+        //offsetDeg (- is cw, + is ccw)
+        leftFront  = new SwerveModuleProto(1, -55, steerPID);
+        rightFront = new SwerveModuleProto(2,  45, steerPID);
+        rightBack  = new SwerveModuleProto(3, 167, steerPID);
+        leftBack   = new SwerveModuleProto(4, -17, steerPID);
 
         //Zero the gyro after a second (to let it calibrate)
         new Thread(() -> {
@@ -88,6 +89,7 @@ public class Drivetrain extends SubsystemBase {
         //Calculate the odometry vector components [-maxDriveVel, maxDriveVel]
         double oX = (X1 + X2 + X3 + X4) / 4D;
         double oY = (Y1 + Y2 + Y3 + Y4) / 4D;
+        SmartDashboard.putString("Odo Data", "oX: " + roundStr(oX, 3) + " oY: " + roundStr(oY, 3));
         //double oHeading = getHeading(oX, oY);
         //double oSpeed = Math.sqrt(oX*oX + oY*oY);
         //oX = getHeadingX(oHeading+odoR) * oSpeed;
@@ -98,8 +100,8 @@ public class Drivetrain extends SubsystemBase {
         double period = prevTimeSeconds >= 0 ? currTimeSec - prevTimeSeconds : 0.0; prevTimeSeconds = currTimeSec;
 
         //oX * DRIVE_VEL_TO_METERS_PER_SECOND is the distance traveled in meters in a second, then multiplied by the period
-        double changeX = oX * ModuleConstants.DRIVE_ENCODER_RPM_2_METER_PER_SEC * period;
-        double changeY = oY * ModuleConstants.DRIVE_ENCODER_RPM_2_METER_PER_SEC * period;
+        double changeY = oX * ModuleConstants.DRIVE_ENCODER_RPM_2_METER_PER_SEC * period;
+        double changeX = oY * ModuleConstants.DRIVE_ENCODER_RPM_2_METER_PER_SEC * period;
         odometer.update(changeX, changeY);
     }
 
@@ -112,13 +114,13 @@ public class Drivetrain extends SubsystemBase {
         XL = (Math.abs(XL) <= Constants.joyDebounce) ? 0 : XL; YL = (Math.abs(YL) <= Constants.joyDebounce) ? 0 : YL;
         XR = (Math.abs(XR) <= Constants.joyDebounce) ? 0 : XR; YR = (Math.abs(YR) <= Constants.joyDebounce) ? 0 : YR;
 
-        SmartDashboard.putString("Data0", "XL: " + XL + " YL: " + YL + " XR: " + XR + " YR: " + YR);
+        SmartDashboard.putString("Joy Data", "XL: " + round(XL, 2) + " YL: " + round(YL, 2) + " XR: " + round(XR, 2) + " YR: " + round(YR, 2));
 
         if (mode == DriveMode.FO_SWERVE) {
             //Left Joystick Angle (0 is forwards, 90 is to the right, and 180 is backwards, etc.)
             double joyHeading = getHeading(XL, YL);
             SmartDashboard.putNumber("Heading", joyHeading);
-            double speed = getJoystickSpeed(XL, YL); //[-1, 1] of the speed of the left joystick
+            double speed = Math.sqrt(XL*XL + YL*YL); //[-1, 1] of the speed of the left joystick
 
             //This variable is for wheel joyHeading (Field-Oriented) if we are driving straight (no turning)
             double rotFromInitial = initialRotation - getGyroRot(); //Should be +-[0, 360)
@@ -147,8 +149,8 @@ public class Drivetrain extends SubsystemBase {
             double Y3 = y*speed - yr;
             double X4 = x*speed - xr;
             double Y4 = y*speed + yr;
-            SmartDashboard.putString("Data", "X: " + x + " Y: " + y);
-            SmartDashboard.putString("Data2", "RX: " + xr + " RY: " + yr);
+            //SmartDashboard.putString("Data", "X: " + x + " Y: " + y);
+            //SmartDashboard.putString("Data2", "RX: " + xr + " RY: " + yr);
 
             double speedMax = Math.sqrt(xr*xr + (1+yr)*(1+yr)); //The largest possible speed from vectors
             leftFront.setState(Math.sqrt(X1*X1+Y1*Y1)/speedMax, getHeading(X1, Y1));
@@ -203,7 +205,7 @@ public class Drivetrain extends SubsystemBase {
 
     //Gyroscope
     public double getGyroRot() {
-        return gyro.getAngle();
+        return gyro.getYaw();
     }
 
     public void zeroGyro() {

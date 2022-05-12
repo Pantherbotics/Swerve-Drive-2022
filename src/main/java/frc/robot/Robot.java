@@ -15,14 +15,21 @@
 
 package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 public class Robot extends TimedRobot {
     private RobotContainer kRobotContainer;
+    public final SendableChooser<Double> speedChooser = new SendableChooser<>();
 
     @Override
     public void robotInit() {
-        kRobotContainer = new RobotContainer();
+        speedChooser.setDefaultOption("Normal (Fast)", 1.0);
+        speedChooser.addOption("Safe (Slow)", 0.25);
+        SmartDashboard.putData(speedChooser);
+
+        kRobotContainer = new RobotContainer(this);
     }
 
     @Override

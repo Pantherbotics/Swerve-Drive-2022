@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
 import com.ctre.phoenix.motorcontrol.TalonSRXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
@@ -9,11 +10,14 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class SwerveModuleProto extends SwerveModule {
+    private final int id;
+
     //Drive stuff
     private final CANSparkMax drive;
     private final SparkMaxPIDController pidController;
@@ -24,9 +28,7 @@ public class SwerveModuleProto extends SwerveModule {
     @Nullable private final CANCoder canCoder;
 
     //Variable declarations
-    double kP;
-    double kI;
-    double kD;
+    double kP, kI, kD, kF;
     double potMax = 3798;
     double sumError = 0, errorChange = 0, lastError = 0;
     double offsetDeg;
@@ -37,7 +39,7 @@ public class SwerveModuleProto extends SwerveModule {
      * @param pid PID constants for the module steering
      */
     public SwerveModuleProto(int id, int offsetDeg, PID pid) {
-        kP = pid.kP; kI = pid.kI; kD = pid.kD;
+        kP = pid.kP; kI = pid.kI; kD = pid.kD; kF = pid.kF; this.id = id;
 
         this.offsetDeg = offsetDeg;
         //Drive motor
@@ -63,10 +65,11 @@ public class SwerveModuleProto extends SwerveModule {
             canCoder.setPositionToAbsolute();
             steer.configRemoteFeedbackFilter(canCoder, 0);
             steer.configSelectedFeedbackSensor(TalonSRXFeedbackDevice.RemoteSensor0, 0, 20);
-            steer.config_kP(0, 0.2);
-            steer.config_kI(0, 0.0);
-            steer.config_kD(0, 0.0);
-            steer.config_kF(0, 0.0);
+            steer.config_kP(0, kP);
+            steer.config_kI(0, kI);
+            steer.config_kD(0, kD);
+            steer.config_kF(0, kF);
+            steer.setSelectedSensorPosition(canCoder.getAbsolutePosition());
 
             analogInput = null;
         }else {
@@ -97,11 +100,21 @@ public class SwerveModuleProto extends SwerveModule {
      * @param target Target Angle in Degrees [0, 360)
      */
     public void setState(double speed, double target) {
-        steerTarget = target;
+        //Ignore small values (like when the stick is resting), so it's not defaulting to 0 Degrees
+        if (Math.abs(speed) <= 0.05) {
+            stop();
+            return;
+        }
 
         //Custom PID loop
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
-            canCoder.setPosition(target + offsetDeg);
+            //target = MathUtils.restrictAngle(target + offsetDeg);
+            double errorAng = boundHalfDegrees(target - getAngle());
+            double pos = steer.getSelectedSensorPosition() + errorAng * (4096D/360D);
+            steerTarget = pos;
+
+            steer.set(TalonSRXControlMode.Position, pos);
+            SmartDashboard.putString("[" + id + "] Data", MathUtils.round(target, 3) + ":" + MathUtils.round(getAngle(), 3));
         }else {
             double error = getModifiedError(target);
             sumError += error * 0.02;
@@ -109,6 +122,7 @@ public class SwerveModuleProto extends SwerveModule {
             double pidOutput = error * kP + kI * sumError + kD * errorChange;
             steer.set(ControlMode.PercentOutput, pidOutput);
             lastError = error;
+            steerTarget = target;
         }
 
         //Drive Speed with spark
@@ -116,12 +130,17 @@ public class SwerveModuleProto extends SwerveModule {
         pidController.setReference(speed, CANSparkMax.ControlType.kVelocity);
     }
 
+    public void stop() {
+        drive.set(0);
+        steer.set(ControlMode.PercentOutput, 0);
+    }
+
     /**
      * @return the current angle of the module's wheel
      */
     public double getAngle() {
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
-            return canCoder.getAbsolutePosition() + offsetDeg;
+            return MathUtils.restrictAngle(steer.getSelectedSensorPosition()*360D/4096D + offsetDeg);
         }else if (analogInput != null) {
             double ang = analogInput.getValue(); //analog in on the Rio
             ang = ang*360/potMax + offsetDeg + 90; //Convert to compass type heading + offset
@@ -129,6 +148,10 @@ public class SwerveModuleProto extends SwerveModule {
             return ang;
         }
         return 0;
+    }
+
+    public double getPosition() {
+        return steer.getSelectedSensorPosition();
     }
 
     /**
@@ -158,6 +181,6 @@ public class SwerveModuleProto extends SwerveModule {
 
     @Override
     public boolean isAtTarget() {
-        return Math.abs(getError(steerTarget)) <= 5;
+        return Math.abs(steer.getSelectedSensorPosition() - steerTarget) <= 64;
     }
 }
