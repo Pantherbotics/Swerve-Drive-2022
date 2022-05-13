@@ -13,6 +13,7 @@ import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Constants.*;
@@ -31,6 +32,7 @@ public class SwerveModuleProto {
     public final TalonSRX steer;
     @Nullable private final AnalogInput analogInput;
     @Nullable public final CANCoder canCoder;
+
 
     //Variable declarations
     double kP, kI, kD, kF;
@@ -64,6 +66,7 @@ public class SwerveModuleProto {
 
         //Steering Motor setup
         steer = new TalonSRX(id);//set in id ())create talon object
+
 
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder) {
             canCoder = new CANCoder(id + 4);

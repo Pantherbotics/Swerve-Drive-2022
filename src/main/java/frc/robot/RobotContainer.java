@@ -1,5 +1,7 @@
 package frc.robot;
 
+import com.ctre.phoenix.sensors.AbsoluteSensorRange;
+import com.ctre.phoenix.sensors.CANCoder;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -10,6 +12,8 @@ import frc.robot.Constants.OIConstants;
 import frc.robot.commands.RunSwerveJoystick;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.util.AutoPaths;
+import frc.robot.util.PID;
+import frc.robot.util.SwerveModuleProto;
 
 @SuppressWarnings("unused")
 public class RobotContainer {
@@ -64,6 +68,7 @@ public class RobotContainer {
         }
     }
 
+    public CANCoder canCoder = null;
     public void updateSmartDashboard() {
         SmartDashboard.putNumber("Gyro", drivetrain.getHeading());
         SmartDashboard.putNumber("Swerve[1] Angle", Math.toDegrees(drivetrain.leftFront.getAngle()));
@@ -71,10 +76,17 @@ public class RobotContainer {
         SmartDashboard.putNumber("Swerve[3] Angle", Math.toDegrees(drivetrain.rightBack.getAngle()));
         SmartDashboard.putNumber("Swerve[4] Angle", Math.toDegrees(drivetrain.leftBack.getAngle()));
 
-        SmartDashboard.putNumber("Swerve[1] CCA", Math.toDegrees(drivetrain.leftFront.canCoder.getAbsolutePosition()));
-        SmartDashboard.putNumber("Swerve[2] CCA", Math.toDegrees(drivetrain.rightFront.canCoder.getAbsolutePosition()));
-        SmartDashboard.putNumber("Swerve[3] CCA", Math.toDegrees(drivetrain.rightBack.canCoder.getAbsolutePosition()));
-        SmartDashboard.putNumber("Swerve[4] CCA", Math.toDegrees(drivetrain.leftBack.canCoder.getAbsolutePosition()));
+        if (canCoder == null) {
+            canCoder = new CANCoder(8);
+        }
+        SmartDashboard.putNumber("Swerve[4] CCA", Math.toDegrees(canCoder.getAbsolutePosition()));
+
+
+
+        //SmartDashboard.putNumber("Swerve[1] CCA", Math.toDegrees(drivetrain.leftFront.canCoder.getAbsolutePosition()));
+        //SmartDashboard.putNumber("Swerve[2] CCA", Math.toDegrees(drivetrain.rightFront.canCoder.getAbsolutePosition()));
+        //SmartDashboard.putNumber("Swerve[3] CCA", Math.toDegrees(drivetrain.rightBack.canCoder.getAbsolutePosition()));
+        //SmartDashboard.putNumber("Swerve[4] CCA", Math.toDegrees(drivetrain.leftBack.canCoder2.getAbsolutePosition()));
 
 
         SmartDashboard.putNumber("Swerve[1] Steer", Math.toDegrees(drivetrain.leftFront.steer.getSelectedSensorPosition()));

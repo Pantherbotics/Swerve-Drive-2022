@@ -19,7 +19,7 @@ public class Constants {
      * The encoder type we are using for the swerve
      * Options: CanCoder, Potentiometer
      */
-    public static final EncoderType kEncoderType = EncoderType.CanCoder;
+    public static final EncoderType kEncoderType = EncoderType.Potentiometer;
     //If using the Potentiometer, this specifies its max value so we can get the angle
     public static final double potMax = 3798;
 
