@@ -15,6 +15,8 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.util.PID;
 import frc.robot.util.SwerveModuleProto;
 
+import static frc.robot.util.MathUtils.round;
+
 @SuppressWarnings("unused")
 public class Drivetrain extends SubsystemBase {
     public final SwerveModuleProto leftFront;
@@ -26,11 +28,12 @@ public class Drivetrain extends SubsystemBase {
     private final SwerveDriveOdometry odometer = new SwerveDriveOdometry(DriveConstants.kDriveKinematics, new Rotation2d(0));
 
     public Drivetrain() {
-        PID pid = new PID(0.1, 0.0005, 0);
-        leftFront  = new SwerveModuleProto(1,  165, pid); //165
-        rightFront = new SwerveModuleProto(2,  290, pid); //290
-        rightBack  = new SwerveModuleProto(3,   90, pid); //90
-        leftBack   = new SwerveModuleProto(4,  -20, pid); //-20
+        PID pid = new PID(1.0, 0.0005, 0);
+        int offset = 180;
+        leftFront  = new SwerveModuleProto(1,  -55+offset, pid); //165
+        rightFront = new SwerveModuleProto(2,   45+offset, pid); //290
+        rightBack  = new SwerveModuleProto(3,  167+offset, pid); //90
+        leftBack   = new SwerveModuleProto(4,  -17+offset, pid); //-20
 
         //leftFront  = new SwerveModule(1, 1,  2,  3, 0, drivePID, steerPID);
         //rightFront = new SwerveModule(2, 4,  5,  6, 0, drivePID, steerPID);
@@ -86,7 +89,7 @@ public class Drivetrain extends SubsystemBase {
 
 
         SmartDashboard.putNumber("Robot Heading", getHeading());
-        SmartDashboard.putString("Robot Location", getPose().getTranslation().toString());
+        SmartDashboard.putString("Robot Location", "Y: " + round(getPose().getTranslation().getX(),3) + " X: " + round(getPose().getTranslation().getY(),3));
     }
 
     public void stopModules() {

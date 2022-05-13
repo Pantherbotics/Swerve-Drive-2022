@@ -19,7 +19,7 @@ public class Constants {
      * The encoder type we are using for the swerve
      * Options: CanCoder, Potentiometer
      */
-    public static final EncoderType kEncoderType = EncoderType.Potentiometer;
+    public static final EncoderType kEncoderType = EncoderType.CanCoder;
     //If using the Potentiometer, this specifies its max value so we can get the angle
     public static final double potMax = 3798;
 
@@ -40,7 +40,7 @@ public class Constants {
         public static final double kTurningEncoderRot2Rad = kTurningMotorGearRatio * 2 * Math.PI;
         public static final double kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter / 60;
         public static final double kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad / 60;
-        public static final double kPTurning = 0.5;
+        public static final double kPTurning = 0.25;
         public static final double kITurning = 0.0;
         public static final double kDTurning = 0.0;
     }

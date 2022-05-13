@@ -39,8 +39,8 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(new RunSwerveJoystick(
                 drivetrain,
                 () -> -powAxis(pJoy.getRawAxis(OIConstants.kDriverYAxis), exp)/speedChooser.getSelected(),
-                () -> powAxis(pJoy.getRawAxis(OIConstants.kDriverXAxis), exp)/speedChooser.getSelected(),
-                () -> pJoy.getRawAxis(OIConstants.kDriverRotAxis)/speedChooser.getSelected()));
+                () -> -powAxis(pJoy.getRawAxis(OIConstants.kDriverXAxis), exp)/speedChooser.getSelected(),
+                () -> -pJoy.getRawAxis(OIConstants.kDriverRotAxis)/speedChooser.getSelected()));
 
         //For easy calibration, use this code instead to have all wheels drive forward
         //drivetrain.setDefaultCommand(new RunSwerveJoystick(drivetrain, () -> 0.1, () -> 0.0, () -> 0.0));
@@ -71,28 +71,9 @@ public class RobotContainer {
     public CANCoder canCoder = null;
     public void updateSmartDashboard() {
         SmartDashboard.putNumber("Gyro", drivetrain.getHeading());
-        SmartDashboard.putNumber("Swerve[1] Angle", Math.toDegrees(drivetrain.leftFront.getAngle()));
-        SmartDashboard.putNumber("Swerve[2] Angle", Math.toDegrees(drivetrain.rightFront.getAngle()));
-        SmartDashboard.putNumber("Swerve[3] Angle", Math.toDegrees(drivetrain.rightBack.getAngle()));
-        SmartDashboard.putNumber("Swerve[4] Angle", Math.toDegrees(drivetrain.leftBack.getAngle()));
-
-        if (canCoder == null) {
-            canCoder = new CANCoder(8);
-        }
-        SmartDashboard.putNumber("Swerve[4] CCA", Math.toDegrees(canCoder.getAbsolutePosition()));
-
-
-
-        //SmartDashboard.putNumber("Swerve[1] CCA", Math.toDegrees(drivetrain.leftFront.canCoder.getAbsolutePosition()));
-        //SmartDashboard.putNumber("Swerve[2] CCA", Math.toDegrees(drivetrain.rightFront.canCoder.getAbsolutePosition()));
-        //SmartDashboard.putNumber("Swerve[3] CCA", Math.toDegrees(drivetrain.rightBack.canCoder.getAbsolutePosition()));
-        //SmartDashboard.putNumber("Swerve[4] CCA", Math.toDegrees(drivetrain.leftBack.canCoder2.getAbsolutePosition()));
-
-
-        SmartDashboard.putNumber("Swerve[1] Steer", Math.toDegrees(drivetrain.leftFront.steer.getSelectedSensorPosition()));
-        SmartDashboard.putNumber("Swerve[2] Steer", Math.toDegrees(drivetrain.rightFront.steer.getSelectedSensorPosition()));
-        SmartDashboard.putNumber("Swerve[3] Steer", Math.toDegrees(drivetrain.rightBack.steer.getSelectedSensorPosition()));
-        SmartDashboard.putNumber("Swerve[4] Steer", Math.toDegrees(drivetrain.leftBack.steer.getSelectedSensorPosition()));
-
+        SmartDashboard.putNumber("Swerve[1] Angle", drivetrain.leftFront.getAngle());
+        SmartDashboard.putNumber("Swerve[2] Angle", drivetrain.rightFront.getAngle());
+        SmartDashboard.putNumber("Swerve[3] Angle", drivetrain.rightBack.getAngle());
+        SmartDashboard.putNumber("Swerve[4] Angle", drivetrain.leftBack.getAngle());
     }
 }

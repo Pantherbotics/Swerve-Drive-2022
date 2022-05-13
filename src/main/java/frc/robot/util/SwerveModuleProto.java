@@ -19,6 +19,8 @@ import frc.robot.Constants;
 import frc.robot.Constants.*;
 import org.jetbrains.annotations.Nullable;
 
+import static frc.robot.util.MathUtils.round;
+
 @SuppressWarnings("unused")
 public class SwerveModuleProto {
     private final int id;
@@ -94,10 +96,6 @@ public class SwerveModuleProto {
         // RobotController.getVoltage5V(); //Helpful to interpret analog inputs when source is not 5V
     }
 
-    private double getTurningPosition() {
-        return getAbsoluteEncoderRad();
-    }
-
     public double getDriveVelocity() {
         return driveEncoder.getVelocity();
     }
@@ -112,7 +110,7 @@ public class SwerveModuleProto {
         //Probably just have to get wheel angle instead
         //SmartDashboard.putNumber("Swerve[" + id + "] Drive Vel (RPM)", getDriveVelocity());
         //SmartDashboard.putNumber("Swerve[" + id + "] Wheel Rot (Rad)", getTurningPosition());
-        return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getTurningPosition()));
+        return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getAbsoluteEncoderRad()));
     }
 
 
@@ -125,21 +123,23 @@ public class SwerveModuleProto {
             stop();
             return;
         }
-        state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
-
-        SmartDashboard.putNumber("Swerve[" + id + "] SA", state.angle.getRadians());
+        //Enable this at your own peril
+        // state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
 
         //TODO check range of values from here, currently assuming [0, 360), could be [-180, 180]
-        double target = Math.toDegrees(state.angle.getRadians()) + 180;
+        double target = state.angle.getDegrees();
+
+        SmartDashboard.putString("Swerve[" + id + "] SA", round(state.angle.getDegrees(), 1) + ":" + round(target, 1));
+
 
         //Custom PID loop
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
             //target = MathUtils.restrictAngle(target + offsetDeg);
             double errorAng = boundHalfDegrees(target - getAngle());
-            double pos = steer.getSelectedSensorPosition() + errorAng * (4096D/360D);
+            double pos = steer.getSelectedSensorPosition() + (-errorAng) * (4096D/360D);
 
             steer.set(TalonSRXControlMode.Position, pos);
-            SmartDashboard.putString("[" + id + "] Data", MathUtils.round(target, 3) + ":" + MathUtils.round(getAngle(), 3));
+            SmartDashboard.putString("[" + id + "] Data", round(target, 3) + ":" + round(getAngle(), 3));
         }else {
             double error = getModifiedError(target);
             sumError += error * 0.02;
@@ -155,8 +155,8 @@ public class SwerveModuleProto {
     }
 
     public void setDesiredStateAuto(SwerveModuleState state) {
-        state = new SwerveModuleState(state.speedMetersPerSecond, new Rotation2d(-state.angle.getRadians()));
-        state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
+        //state = new SwerveModuleState(state.speedMetersPerSecond, new Rotation2d(-state.angle.getRadians()));
+        //state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
 
         setDesiredState(state);
     }
@@ -170,15 +170,15 @@ public class SwerveModuleProto {
      * @return the current angle of the module's wheel in radians [-pi, pi])
      */
     public double getAbsoluteEncoderRad() {
-        return Math.toRadians(getAngle()) - 180;
+        return Math.toRadians(getAngle());
     }
 
     /**
-     * @return the current angle of the module's wheel [0, 360)
+     * @return the current angle of the module's wheel [-180, 180)
      */
     public double getAngle() {
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
-            return MathUtils.restrictAngle(steer.getSelectedSensorPosition()*360D/4096D + offsetDeg);
+            return -(MathUtils.restrictAngle(steer.getSelectedSensorPosition()*360D/4096D + offsetDeg) - 180);
         }else if (analogInput != null) {
             double ang = analogInput.getValue(); //analog in on the Rio
             ang = ang*360/potMax + offsetDeg + 90; //Convert to compass type heading + offset
