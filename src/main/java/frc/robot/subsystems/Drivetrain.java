@@ -48,6 +48,10 @@ public class Drivetrain extends SubsystemBase {
         gyro.reset();
     }
 
+
+    /**
+     * Returns the current heading of the robot in degrees [-180, 180]
+     */
     public double getHeading() {
         return gyro.getYaw();
         //return Math.IEEEremainder(-gyro.getAngle(), 360);
