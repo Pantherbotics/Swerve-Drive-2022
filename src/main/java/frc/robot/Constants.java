@@ -22,7 +22,8 @@ public class Constants {
     public static final EncoderType kEncoderType = EncoderType.CanCoder;
     //If using the Potentiometer, this specifies its max value so we can get the angle
     public static final double potMax = 3798;
-    
+
+    public static final double neoMaxRPM = 4000;
 
     //Joysticks
     public static final int pJoyID = 0;

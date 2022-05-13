@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.util.PID;
 import frc.robot.util.SwerveModuleProto;
 
 @SuppressWarnings("unused")
@@ -24,11 +25,11 @@ public class Drivetrain extends SubsystemBase {
     private final SwerveDriveOdometry odometer = new SwerveDriveOdometry(DriveConstants.kDriveKinematics, new Rotation2d(0));
 
     public Drivetrain() {
-        double offset = 0;
-        leftFront  = new SwerveModuleProto(1,  165+offset); //165
-        rightFront = new SwerveModuleProto(2,  290+offset); //290
-        rightBack  = new SwerveModuleProto(3,   90+offset); //90
-        leftBack   = new SwerveModuleProto(4,  -20+offset); //-20
+        PID pid = new PID(1.0, 0.0005, 0);
+        leftFront  = new SwerveModuleProto(1,  165, pid); //165
+        rightFront = new SwerveModuleProto(2,  290, pid); //290
+        rightBack  = new SwerveModuleProto(3,   90, pid); //90
+        leftBack   = new SwerveModuleProto(4,  -20, pid); //-20
 
         //leftFront  = new SwerveModule(1, 1,  2,  3, 0, drivePID, steerPID);
         //rightFront = new SwerveModule(2, 4,  5,  6, 0, drivePID, steerPID);
@@ -99,7 +100,7 @@ public class Drivetrain extends SubsystemBase {
 
     public void setModuleStatesAuto(SwerveModuleState[] desiredStates) {
         SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
-        //Flip left and right sides, i don't know why
+        //Flip left and right sides, I don't know why
         leftFront.setDesiredStateAuto(desiredStates[1]);
         rightFront.setDesiredStateAuto(desiredStates[0]);
         leftBack.setDesiredStateAuto(desiredStates[3]);
