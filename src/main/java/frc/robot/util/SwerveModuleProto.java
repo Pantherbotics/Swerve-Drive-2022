@@ -92,11 +92,8 @@ public class SwerveModuleProto {
         // RobotController.getVoltage5V(); //Helpful to interpret analog inputs when source is not 5V
     }
 
-    //NEOs return rotations for getPosition, so convert ticks on TalonSRX to rotations, and then apply
-    // The conversion we could add for NEOs, but not for Talons
     private double getTurningPosition() {
-        //return (steer.getSelectedSensorPosition()/2048D) * ModuleConstants.kTurningEncoderRot2Rad;
-        return -getAbsoluteEncoderRad();
+        return getAbsoluteEncoderRad();
     }
 
     public double getDriveVelocity() {
@@ -113,7 +110,7 @@ public class SwerveModuleProto {
         //Probably just have to get wheel angle instead
         //SmartDashboard.putNumber("Swerve[" + id + "] Drive Vel (RPM)", getDriveVelocity());
         //SmartDashboard.putNumber("Swerve[" + id + "] Wheel Rot (Rad)", getTurningPosition());
-        return new SwerveModuleState(getDriveVelocity(), new Rotation2d(-getTurningPosition()));
+        return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getTurningPosition()));
     }
 
 
@@ -167,8 +164,11 @@ public class SwerveModuleProto {
         steer.set(ControlMode.PercentOutput, 0);
     }
 
+    /**
+     * @return the current angle of the module's wheel in radians [-pi, pi])
+     */
     public double getAbsoluteEncoderRad() {
-        return Math.toRadians(getAngle());
+        return Math.toRadians(getAngle()) - 180;
     }
 
     /**

@@ -53,10 +53,10 @@ public class Constants {
         public static final double kWheelBase = Units.inchesToMeters(19.5);
 
         public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
-                new Translation2d(kWheelBase / 2, -kTrackWidth / 2),
-                new Translation2d(kWheelBase / 2, kTrackWidth / 2),
-                new Translation2d(-kWheelBase / 2, -kTrackWidth / 2),
-                new Translation2d(-kWheelBase / 2, kTrackWidth / 2)
+                new Translation2d( kWheelBase / 2,  kTrackWidth / 2),  //Left Front
+                new Translation2d( kWheelBase / 2, -kTrackWidth / 2),  //Right Front
+                new Translation2d(-kWheelBase / 2, -kTrackWidth / 2),  //Right Back
+                new Translation2d(-kWheelBase / 2,  kTrackWidth / 2)   //Left Back
         );
 
         //Assume 4000RPM under driving load

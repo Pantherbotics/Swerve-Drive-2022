@@ -49,7 +49,8 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public double getHeading() {
-        return Math.IEEEremainder(-gyro.getAngle(), 360);
+        return gyro.getYaw();
+        //return Math.IEEEremainder(-gyro.getAngle(), 360);
     }
 
     public Pose2d getPose() {
@@ -70,12 +71,12 @@ public class Drivetrain extends SubsystemBase {
         SwerveModuleState rF = rightFront.getState();
         SwerveModuleState rB = rightBack.getState();
         SwerveModuleState lB = leftBack.getState();
-        lF = new SwerveModuleState(lF.speedMetersPerSecond, new Rotation2d(-lF.angle.getRadians()));
-        rF = new SwerveModuleState(rF.speedMetersPerSecond, new Rotation2d(-rF.angle.getRadians()));
-        rB = new SwerveModuleState(rB.speedMetersPerSecond, new Rotation2d(-rB.angle.getRadians()));
-        lB = new SwerveModuleState(lB.speedMetersPerSecond, new Rotation2d(-lB.angle.getRadians()));
+        lF = new SwerveModuleState(lF.speedMetersPerSecond, new Rotation2d(lF.angle.getRadians()));
+        rF = new SwerveModuleState(rF.speedMetersPerSecond, new Rotation2d(rF.angle.getRadians()));
+        rB = new SwerveModuleState(rB.speedMetersPerSecond, new Rotation2d(rB.angle.getRadians()));
+        lB = new SwerveModuleState(lB.speedMetersPerSecond, new Rotation2d(lB.angle.getRadians()));
 
-        odometer.update(Rotation2d.fromDegrees(getHeading()), rF, lF, rB, lB);
+        odometer.update(Rotation2d.fromDegrees(getHeading()), lF, rF, rB, lB);
         //odometer.update(getRotation2d(), rightFront.getState(), leftFront.getState(), rightBack.getState(), leftBack.getState());
 
 
@@ -94,8 +95,8 @@ public class Drivetrain extends SubsystemBase {
         SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
         leftFront.setDesiredState(desiredStates[0]);
         rightFront.setDesiredState(desiredStates[1]);
-        leftBack.setDesiredState(desiredStates[2]);
-        rightBack.setDesiredState(desiredStates[3]);
+        rightBack.setDesiredState(desiredStates[2]);
+        leftBack.setDesiredState(desiredStates[3]);
     }
 
     public void setModuleStatesAuto(SwerveModuleState[] desiredStates) {
