@@ -57,7 +57,7 @@ public class Drivetrain extends SubsystemBase {
      * Returns the current heading of the robot in degrees [-180, 180]
      */
     public double getHeading() {
-        return gyro.getYaw();
+        return -gyro.getYaw();
         //return Math.IEEEremainder(-gyro.getAngle(), 360);
     }
 
@@ -86,7 +86,6 @@ public class Drivetrain extends SubsystemBase {
 
         odometer.update(Rotation2d.fromDegrees(getHeading()), lF, rF, rB, lB);
         //odometer.update(getRotation2d(), rightFront.getState(), leftFront.getState(), rightBack.getState(), leftBack.getState());
-
 
         SmartDashboard.putNumber("Robot Heading", getHeading());
         SmartDashboard.putString("Robot Location", "Y: " + round(getPose().getTranslation().getX(),3) + " X: " + round(getPose().getTranslation().getY(),3));
