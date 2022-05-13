@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -24,7 +25,7 @@ public class Drivetrain extends SubsystemBase {
     public DriveMode mode = DriveMode.FO_SWERVE;
 
     //Other swerve variables
-    private final AHRS gyro = new AHRS(I2C.Port.kOnboard);
+    private final AHRS gyro = new AHRS(SPI.Port.kMXP);
     private final Odometer odometer = new Odometer();
 
     //Initial rotation so we can do field-oriented drive
