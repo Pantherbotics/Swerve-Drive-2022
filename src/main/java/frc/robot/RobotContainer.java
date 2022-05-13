@@ -66,9 +66,21 @@ public class RobotContainer {
 
     public void updateSmartDashboard() {
         SmartDashboard.putNumber("Gyro", drivetrain.getHeading());
-        SmartDashboard.putNumber("Swerve[1] Angle", Math.toDegrees(drivetrain.leftFront.getAbsoluteEncoderRad()));
-        SmartDashboard.putNumber("Swerve[2] Angle", Math.toDegrees(drivetrain.rightFront.getAbsoluteEncoderRad()));
-        SmartDashboard.putNumber("Swerve[3] Angle", Math.toDegrees(drivetrain.rightBack.getAbsoluteEncoderRad()));
-        SmartDashboard.putNumber("Swerve[4] Angle", Math.toDegrees(drivetrain.leftBack.getAbsoluteEncoderRad()));
+        SmartDashboard.putNumber("Swerve[1] Angle", Math.toDegrees(drivetrain.leftFront.getAngle()));
+        SmartDashboard.putNumber("Swerve[2] Angle", Math.toDegrees(drivetrain.rightFront.getAngle()));
+        SmartDashboard.putNumber("Swerve[3] Angle", Math.toDegrees(drivetrain.rightBack.getAngle()));
+        SmartDashboard.putNumber("Swerve[4] Angle", Math.toDegrees(drivetrain.leftBack.getAngle()));
+
+        SmartDashboard.putNumber("Swerve[1] CCA", Math.toDegrees(drivetrain.leftFront.canCoder.getAbsolutePosition()));
+        SmartDashboard.putNumber("Swerve[2] CCA", Math.toDegrees(drivetrain.rightFront.canCoder.getAbsolutePosition()));
+        SmartDashboard.putNumber("Swerve[3] CCA", Math.toDegrees(drivetrain.rightBack.canCoder.getAbsolutePosition()));
+        SmartDashboard.putNumber("Swerve[4] CCA", Math.toDegrees(drivetrain.leftBack.canCoder.getAbsolutePosition()));
+
+
+        SmartDashboard.putNumber("Swerve[1] Steer", Math.toDegrees(drivetrain.leftFront.steer.getSelectedSensorPosition()));
+        SmartDashboard.putNumber("Swerve[2] Steer", Math.toDegrees(drivetrain.rightFront.steer.getSelectedSensorPosition()));
+        SmartDashboard.putNumber("Swerve[3] Steer", Math.toDegrees(drivetrain.rightBack.steer.getSelectedSensorPosition()));
+        SmartDashboard.putNumber("Swerve[4] Steer", Math.toDegrees(drivetrain.leftBack.steer.getSelectedSensorPosition()));
+
     }
 }

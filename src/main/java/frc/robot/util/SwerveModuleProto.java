@@ -28,9 +28,9 @@ public class SwerveModuleProto {
     private final SparkMaxPIDController drivePID;
 
     //Steering stuff
-    private final TalonSRX steer;
+    public final TalonSRX steer;
     @Nullable private final AnalogInput analogInput;
-    @Nullable private final CANCoder canCoder;
+    @Nullable public final CANCoder canCoder;
 
     //Variable declarations
     double kP, kI, kD, kF;
@@ -61,7 +61,7 @@ public class SwerveModuleProto {
             steer.config_kI(0, kI);
             steer.config_kD(0, kD);
             steer.config_kF(0, kF);
-            steer.setSelectedSensorPosition(canCoder.getAbsolutePosition());
+            //steer.setSelectedSensorPosition(canCoder.getAbsolutePosition());
 
             analogInput = null;
         }else {
@@ -128,7 +128,7 @@ public class SwerveModuleProto {
         SmartDashboard.putNumber("Swerve[" + id + "] SA", state.angle.getRadians());
 
         //TODO check range of values from here, currently assuming [0, 360), could be [-180, 180]
-        double target = Math.toDegrees(state.angle.getRadians());
+        double target = Math.toDegrees(state.angle.getRadians()) + 180;
 
         //Custom PID loop
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
