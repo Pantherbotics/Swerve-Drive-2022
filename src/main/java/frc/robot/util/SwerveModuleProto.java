@@ -48,28 +48,6 @@ public class SwerveModuleProto {
 
         this.offsetDeg = offsetDeg;
 
-        //Steering Motor setup
-        steer = new TalonSRX(id);//set in id ())create talon object
-
-        if (Constants.kEncoderType == Constants.EncoderType.CanCoder) {
-            canCoder = new CANCoder(id + 4);
-            canCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
-            canCoder.setPositionToAbsolute();
-            steer.configRemoteFeedbackFilter(canCoder, 0);
-            steer.configSelectedFeedbackSensor(TalonSRXFeedbackDevice.RemoteSensor0, 0, 20);
-            steer.config_kP(0, kP);
-            steer.config_kI(0, kI);
-            steer.config_kD(0, kD);
-            steer.config_kF(0, kF);
-            //steer.setSelectedSensorPosition(canCoder.getAbsolutePosition());
-
-            analogInput = null;
-        }else {
-            analogInput = new AnalogInput(id - 1);
-            canCoder = null;
-        }
-
-
         drive = new CANSparkMax(id, MotorType.kBrushless); drive.restoreFactoryDefaults();
         driveEncoder = drive.getEncoder();
         driveEncoder.setPositionConversionFactor(Constants.ModuleConstants.kDriveEncoderRot2Meter);
@@ -83,6 +61,27 @@ public class SwerveModuleProto {
         drivePID.setIZone(0);
         drivePID.setFF(.000175);
         drivePID.setOutputRange(-1, 1);
+
+        //Steering Motor setup
+        steer = new TalonSRX(id);//set in id ())create talon object
+
+        if (Constants.kEncoderType == Constants.EncoderType.CanCoder) {
+            canCoder = new CANCoder(id + 4);
+            canCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+            canCoder.setPositionToAbsolute();
+            steer.configRemoteFeedbackFilter(canCoder, 0);
+            steer.configSelectedFeedbackSensor(TalonSRXFeedbackDevice.RemoteSensor0, 0, 20);
+            steer.config_kP(0, kP);
+            steer.config_kI(0, kI);
+            steer.config_kD(0, kD);
+            steer.config_kF(0, kF);
+            steer.setSelectedSensorPosition(canCoder.getAbsolutePosition());
+
+            analogInput = null;
+        }else {
+            analogInput = new AnalogInput(id - 1);
+            canCoder = null;
+        }
 
         resetEncoders();
 
