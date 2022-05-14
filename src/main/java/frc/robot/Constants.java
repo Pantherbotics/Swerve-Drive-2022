@@ -61,7 +61,7 @@ public class Constants {
 
         //Assume 4000RPM under driving load
         public static final double kPhysicalMaxSpeedMetersPerSecond = (4000/60D) * ModuleConstants.kDriveEncoderRot2Meter; //~2.65988 m/s
-        public static final double kPhysicalMaxAngularSpeedRadiansPerSecond = 5; //About 5 given wheelbase and drive speed
+        public static final double kPhysicalMaxAngularSpeedRadiansPerSecond = Math.PI*2; //About 5 given wheelbase and drive speed
 
         public static final double kTeleDriveMaxSpeedMetersPerSecond = kPhysicalMaxSpeedMetersPerSecond; //we have about 8.7 ft/s, we don't need to reduce it
         public static final double kTeleDriveMaxAngularSpeedRadiansPerSecond = kPhysicalMaxAngularSpeedRadiansPerSecond; //307 degrees per second doesn't need to be reduced
@@ -72,14 +72,14 @@ public class Constants {
 
     //Checked and verified as of May 1st, 2022
     public static final class AutoConstants {
-        public static final double kMaxSpeedMetersPerSecond = DriveConstants.kPhysicalMaxSpeedMetersPerSecond / 24;
-        public static final double kMaxAngularSpeedRadiansPerSecond = DriveConstants.kPhysicalMaxAngularSpeedRadiansPerSecond / 5; //2.5
+        public static final double kMaxSpeedMetersPerSecond = DriveConstants.kPhysicalMaxSpeedMetersPerSecond / 24D;
+        public static final double kMaxAngularSpeedRadiansPerSecond = DriveConstants.kPhysicalMaxAngularSpeedRadiansPerSecond / 2D; //Pi
         //All the following Constants can be tuned:
-        public static final double kMaxAccelerationMetersPerSecondSquared = 1.0; //1.0
-        public static final double kMaxAngularAccelerationRadiansPerSecondSquared = Math.PI / 4;
+        public static final double kMaxAccelerationMetersPerSecondSquared = 1.0;
+        public static final double kMaxAngularAccelerationRadiansPerSecondSquared = Math.PI;
         public static final double kPXController = 2.5; //1.5
         public static final double kPYController = 2.5; //2.5
-        public static final double kPThetaController = 1.0; //3
+        public static final double kPThetaController = 3.0; //3 //TODO increase this until something happens ...
 
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
                 new TrapezoidProfile.Constraints(

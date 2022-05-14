@@ -55,6 +55,9 @@ public class Drivetrain extends SubsystemBase {
 
     /**
      * Returns the current heading of the robot in degrees [-180, 180]
+     * TODO The examples return it in [0, 360), experiment with this later
+     *
+     * The WPI trajectory/spline creation specifies rotation of the robot from [-pi, pi] positive ccw
      */
     public double getHeading() {
         return -gyro.getYaw();

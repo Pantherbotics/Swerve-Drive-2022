@@ -36,9 +36,7 @@ public class AutoPaths {
     private final Drivetrain drivetrain;
     public ArrayList<NamedCommand> paths = new ArrayList<>();
 
-    // 1. Create trajectory settings
-    private final TrajectoryConfig trajectoryConfig = new TrajectoryConfig(Constants.AutoConstants.kMaxSpeedMetersPerSecond, Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared).setKinematics(Constants.DriveConstants.kDriveKinematics);
-    // 3. Define PID controllers for tracking trajectory
+    //Define PID controllers for tracking trajectory
     private final PIDController xController = new PIDController(Constants.AutoConstants.kPXController, 0, 0);
     private final PIDController yController = new PIDController(Constants.AutoConstants.kPYController, 0, 0);
     private final ProfiledPIDController thetaController = new ProfiledPIDController(Constants.AutoConstants.kPThetaController, 0, 0, Constants.AutoConstants.kThetaControllerConstraints);
@@ -97,13 +95,15 @@ public class AutoPaths {
                 )
         );
 
+        // 1. Create trajectory settings
+        TrajectoryConfig trajectoryConfig = new TrajectoryConfig(Constants.AutoConstants.kMaxSpeedMetersPerSecond, Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared).setKinematics(Constants.DriveConstants.kDriveKinematics);
         paths.add(
                 new NamedCommand(
                         "Test",
                         wrapTrajectories(true, TrajectoryGenerator.generateTrajectory(
-                                new Pose2d(2, 4, Rotation2d.fromDegrees(0.0)),
+                                new Pose2d(2, 2, Rotation2d.fromDegrees(0.0)),
                                 List.of(),
-                                new Pose2d(2, 0, Rotation2d.fromDegrees(90)),
+                                new Pose2d(4, 2, Rotation2d.fromDegrees(90)),
                                 trajectoryConfig
                         ))
                 )
