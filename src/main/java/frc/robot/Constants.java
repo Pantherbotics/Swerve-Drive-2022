@@ -72,7 +72,7 @@ public class Constants {
 
     //Checked and verified as of May 1st, 2022
     public static final class AutoConstants {
-        public static final double kMaxSpeedMetersPerSecond = DriveConstants.kPhysicalMaxSpeedMetersPerSecond / 24D;
+        public static final double kMaxSpeedMetersPerSecond = DriveConstants.kPhysicalMaxSpeedMetersPerSecond / 2.5; // ~1 m/s
         public static final double kMaxAngularSpeedRadiansPerSecond = DriveConstants.kPhysicalMaxAngularSpeedRadiansPerSecond / 2D; //Pi
         //All the following Constants can be tuned:
         public static final double kMaxAccelerationMetersPerSecondSquared = 1.0;

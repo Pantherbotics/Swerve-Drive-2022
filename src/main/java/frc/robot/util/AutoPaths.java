@@ -1,26 +1,21 @@
 package frc.robot.util;
 
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.math.trajectory.TrajectoryUtil;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.Constants;
 import frc.robot.subsystems.Drivetrain;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,43 +43,50 @@ public class AutoPaths {
 
         paths.add(
                 new NamedCommand(
-                        "Forward 2m",
-                        getAutoCmdFromTrajectories(true, "Test1")
+                        "Forwards",
+                        getAutoCmdFromTrajectories(true, "Forwards")
                 )
         );
 
         paths.add(
                 new NamedCommand(
-                        "Back 2m",
-                        getAutoCmdFromTrajectories(true, "Test2")
+                        "Backwards",
+                        getAutoCmdFromTrajectories(true, "Backwards")
                 )
         );
 
         paths.add(
                 new NamedCommand(
-                        "Left 2m",
-                        getAutoCmdFromTrajectories(true, "Test3")
+                        "Left",
+                        getAutoCmdFromTrajectories(true, "Left")
                 )
         );
 
         paths.add(
                 new NamedCommand(
-                        "Right 2m",
-                        getAutoCmdFromTrajectories(true, "Test4")
+                        "Right",
+                        getAutoCmdFromTrajectories(true, "Right")
                 )
         );
 
         paths.add(
                 new NamedCommand(
-                        "Circle starting on the Left of it",
-                        getAutoCmdFromTrajectories(true, "Test5")
+                        "CircleNoRot",
+                        getAutoCmdFromTrajectories(true, "CircleNoRot")
                 )
         );
 
         paths.add(
                 new NamedCommand(
-                        "Arc forward/right turn right",
-                        getAutoCmdFromTrajectories(true, "Test6")
+                        "CircleRot",
+                        getAutoCmdFromTrajectories(true, "CircleRot")
+                )
+        );
+
+        paths.add(
+                new NamedCommand(
+                        "Curve",
+                        getAutoCmdFromTrajectories(true, "Curve")
                 )
         );
 
@@ -100,7 +102,7 @@ public class AutoPaths {
         paths.add(
                 new NamedCommand(
                         "Test",
-                        wrapTrajectories(true, TrajectoryGenerator.generateTrajectory(
+                        wrapTrajectories(true, (PathPlannerTrajectory) TrajectoryGenerator.generateTrajectory(
                                 new Pose2d(2, 2, Rotation2d.fromDegrees(0.0)),
                                 List.of(),
                                 new Pose2d(4, 2, Rotation2d.fromDegrees(90)),
@@ -111,31 +113,24 @@ public class AutoPaths {
     }
 
     public @Nullable Command getAutoCmdFromTrajectories(boolean firstTraj, String... trajectoryNames) {
-        List<Trajectory> trajectories = new ArrayList<>();
+        List<PathPlannerTrajectory> trajectories = new ArrayList<>();
         for (String name : trajectoryNames) {
             trajectories.add(loadTrajectory(name));
         }
-        return wrapTrajectories(firstTraj, trajectories.toArray(Trajectory[]::new));
+        return wrapTrajectories(firstTraj, trajectories.toArray(PathPlannerTrajectory[]::new));
     }
 
-    private Trajectory loadTrajectory(String name) {
-        String trajectoryJSON = "paths/" + name + ".wpilib.json";
-        try {
-            Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
-            return TrajectoryUtil.fromPathweaverJson(trajectoryPath);
-        } catch (IOException ex) {
-            DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON, false);
-        }
-        return null;
+    private PathPlannerTrajectory loadTrajectory(String name) {
+        return PathPlanner.loadPath(name, Constants.AutoConstants.kMaxSpeedMetersPerSecond, Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared);
     }
 
-    private @Nullable Command wrapTrajectories(boolean firstTraj, Trajectory... trajectories) {
+    private @Nullable Command wrapTrajectories(boolean firstTraj, PathPlannerTrajectory... trajectories) {
         if (trajectories == null || trajectories.length == 0) { return null; }
 
         List<Command> commands = new ArrayList<>();
-        for (Trajectory trajectory : trajectories) {
+        for (PathPlannerTrajectory trajectory : trajectories) {
             // Construct command to follow trajectory
-            commands.add(new SwerveControllerCommand(
+            commands.add(new PPSwerveControllerCommand(
                     trajectory, drivetrain::getPose, Constants.DriveConstants.kDriveKinematics,
                     xController, yController, thetaController,
                     drivetrain::setModuleStatesAuto, drivetrain
