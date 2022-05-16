@@ -7,7 +7,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -82,13 +81,13 @@ public class Drivetrain extends SubsystemBase {
         SwerveModuleState rF = rightFront.getState();
         SwerveModuleState rB = rightBack.getState();
         SwerveModuleState lB = leftBack.getState();
-        lF = new SwerveModuleState(lF.speedMetersPerSecond, new Rotation2d(lF.angle.getRadians()));
-        rF = new SwerveModuleState(rF.speedMetersPerSecond, new Rotation2d(rF.angle.getRadians()));
-        rB = new SwerveModuleState(rB.speedMetersPerSecond, new Rotation2d(rB.angle.getRadians()));
-        lB = new SwerveModuleState(lB.speedMetersPerSecond, new Rotation2d(lB.angle.getRadians()));
+        //lF = new SwerveModuleState(lF.speedMetersPerSecond, new Rotation2d(lF.angle.getRadians()));
+        //rF = new SwerveModuleState(rF.speedMetersPerSecond, new Rotation2d(rF.angle.getRadians()));
+        //rB = new SwerveModuleState(rB.speedMetersPerSecond, new Rotation2d(rB.angle.getRadians()));
+        //lB = new SwerveModuleState(lB.speedMetersPerSecond, new Rotation2d(lB.angle.getRadians()));
 
         odometer.update(Rotation2d.fromDegrees(getHeading()), lF, rF, rB, lB);
-        //odometer.update(getRotation2d(), rightFront.getState(), leftFront.getState(), rightBack.getState(), leftBack.getState());
+        //odometer.updateWithTime(Timer.getFPGATimestamp(), Rotation2d.fromDegrees(getHeading()), lF, rF, rB, lB);
 
         SmartDashboard.putNumber("Robot Heading", getHeading());
         SmartDashboard.putString("Robot Location", "Y: " + round(getPose().getTranslation().getX(),3) + " X: " + round(getPose().getTranslation().getY(),3));

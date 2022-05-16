@@ -110,6 +110,7 @@ public class SwerveModuleProto {
         //Probably just have to get wheel angle instead
         //SmartDashboard.putNumber("Swerve[" + id + "] Drive Vel (RPM)", getDriveVelocity());
         //SmartDashboard.putNumber("Swerve[" + id + "] Wheel Rot (Rad)", getTurningPosition());
+        //TODO some other teams had problems with negative velocities, I don't think we have that but check anyway
         return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getAbsoluteEncoderRad()));
     }
 
