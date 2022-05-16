@@ -15,6 +15,8 @@ import frc.robot.util.AutoPaths;
 import frc.robot.util.PID;
 import frc.robot.util.SwerveModuleProto;
 
+import static frc.robot.util.MathUtils.round;
+
 @SuppressWarnings("unused")
 public class RobotContainer {
     //Subsystems
@@ -68,12 +70,11 @@ public class RobotContainer {
         }
     }
 
-    public CANCoder canCoder = null;
     public void updateSmartDashboard() {
         SmartDashboard.putNumber("Gyro", drivetrain.getHeading());
-        SmartDashboard.putNumber("Swerve[1] Angle", drivetrain.leftFront.getAngle());
-        SmartDashboard.putNumber("Swerve[2] Angle", drivetrain.rightFront.getAngle());
-        SmartDashboard.putNumber("Swerve[3] Angle", drivetrain.rightBack.getAngle());
-        SmartDashboard.putNumber("Swerve[4] Angle", drivetrain.leftBack.getAngle());
+        SmartDashboard.putString("Swerve[1] Data", "A: " + round(drivetrain.leftFront.getAngle(),2) + " S: " + round(drivetrain.leftFront.getDriveVelocity(), 2));
+        SmartDashboard.putString("Swerve[2] Data", "A: " + round(drivetrain.rightFront.getAngle(),2) + " S: " + round(drivetrain.rightFront.getDriveVelocity(), 2));
+        SmartDashboard.putString("Swerve[3] Data", "A: " + round(drivetrain.rightBack.getAngle(),2) + " S: " + round(drivetrain.rightBack.getDriveVelocity(), 2));
+        SmartDashboard.putString("Swerve[4] Data", "A: " + round(drivetrain.leftBack.getAngle(),2) + " S: " + round(drivetrain.leftBack.getDriveVelocity(), 2));
     }
 }

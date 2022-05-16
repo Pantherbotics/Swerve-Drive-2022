@@ -118,19 +118,22 @@ public class SwerveModuleProto {
     /**
      * @param state The new SwerveModuleState
      */
-    public void setDesiredState(SwerveModuleState state) {
+    public void setDesiredState(SwerveModuleState state, boolean optimize) {
         //If statement ignores when we let go of left stick so wheels aren't defaulting to 0 degrees
         if (Math.abs(state.speedMetersPerSecond) < 0.001) {
             stop();
             return;
         }
-        //Enable this at your own peril
-        // state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
+
+        //Auto states come optimized
+        if (optimize) {
+            state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
+        }
 
         //TODO check range of values from here, currently assuming [0, 360), could be [-180, 180]
         double target = state.angle.getDegrees();
 
-        SmartDashboard.putString("Swerve[" + id + "] SA", round(state.angle.getDegrees(), 1) + ":" + round(target, 1));
+        SmartDashboard.putString("Swerve[" + id + "] Set", "A: " + round(target, 1) + " S: " + round(state.speedMetersPerSecond, 1));
 
 
         //Custom PID loop
@@ -140,7 +143,7 @@ public class SwerveModuleProto {
             double pos = steer.getSelectedSensorPosition() + (-errorAng) * (4096D/360D);
 
             steer.set(TalonSRXControlMode.Position, pos);
-            SmartDashboard.putString("[" + id + "] Data", round(target, 3) + ":" + round(getAngle(), 3));
+            //SmartDashboard.putString("[" + id + "] Data2", round(target, 3) + ":" + round(getAngle(), 3));
         }else {
             double error = getModifiedError(target);
             sumError += error * 0.02;
@@ -151,7 +154,7 @@ public class SwerveModuleProto {
         }
 
         //Drive Speed with spark
-        drivePID.setReference(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond * Constants.neoMaxRPM, CANSparkMax.ControlType.kVelocity);
+        //drivePID.setReference(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond * Constants.neoMaxRPM, CANSparkMax.ControlType.kVelocity);
         drive.set(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
     }
 
@@ -159,7 +162,10 @@ public class SwerveModuleProto {
         //state = new SwerveModuleState(state.speedMetersPerSecond, new Rotation2d(-state.angle.getRadians()));
         //state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
 
-        setDesiredState(state);
+
+        //remove this when done testing
+        //state = new SwerveModuleState(state.speedMetersPerSecond/4D, Rotation2d.fromDegrees(state.angle.getDegrees()));
+        setDesiredState(state, false);
     }
 
     public void stop() {

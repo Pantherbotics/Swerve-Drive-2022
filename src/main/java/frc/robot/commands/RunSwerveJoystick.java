@@ -54,7 +54,7 @@ public class RunSwerveJoystick extends CommandBase {
         ChassisSpeeds chassisSpeeds;
         if (fieldOriented) {
             // Relative to field
-            chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, turningSpeed, Rotation2d.fromDegrees(-drivetrain.getHeading()));
+            chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, turningSpeed, Rotation2d.fromDegrees(drivetrain.getHeading()));
         } else {
             // Relative to robot
             chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);

@@ -90,14 +90,7 @@ public class AutoPaths {
                 )
         );
 
-        paths.add(
-                new NamedCommand(
-                        "Circle w/ Rotation",
-                        getAutoCmdFromTrajectories(true, "Part1", "Part2", "Part3", "Part4")
-                )
-        );
-
-        // 1. Create trajectory settings
+        /*
         TrajectoryConfig trajectoryConfig = new TrajectoryConfig(Constants.AutoConstants.kMaxSpeedMetersPerSecond, Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared).setKinematics(Constants.DriveConstants.kDriveKinematics);
         paths.add(
                 new NamedCommand(
@@ -110,6 +103,7 @@ public class AutoPaths {
                         ))
                 )
         );
+        */
     }
 
     public @Nullable Command getAutoCmdFromTrajectories(boolean firstTraj, String... trajectoryNames) {
