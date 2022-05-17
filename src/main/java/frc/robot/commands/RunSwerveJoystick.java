@@ -50,6 +50,10 @@ public class RunSwerveJoystick extends CommandBase {
             runBoat();
         }else if (drivetrain.getMode() == DriveMode.CAR) {
             runCar();
+        }else if (drivetrain.getMode() == DriveMode.WESTCOAST) {
+            runWestCoast();
+        }else if (drivetrain.getMode() == DriveMode.TANK) {
+            runTank();
         }
     }
 
@@ -86,12 +90,12 @@ public class RunSwerveJoystick extends CommandBase {
     }
 
     private void runBoat() {
-        double YR = getYR();
+        double YL = -getYL();
         double XR = getXR();
 
         //Right stick speed
-        double speed = (YR*YR);//square the speed but keep the sign so it can reverse
-        if (YR < 0) { speed = -speed; }
+        double speed = (YL*YL);//square the speed but keep the sign so it can reverse
+        if (YL < 0) { speed = -speed; }
         if (speed > 1) { speed = 1; }
         if (speed < -1) { speed = -1; }
         speed *= DriveConstants.kPhysicalMaxSpeedMetersPerSecond; //Scale it up to m/s
@@ -107,11 +111,11 @@ public class RunSwerveJoystick extends CommandBase {
     }
 
     private void runCar() {
-        double YR = getYR();
-        double XR = getXR();
+        double YL = -getYL();
+        double XR = -getXR();
 
-        double speed = (YR*YR);//square the speed but keep the sign so it can reverse
-        if(YR < 0){ speed = -speed; }
+        double speed = (YL*YL);//square the speed but keep the sign so it can reverse
+        if(YL < 0){ speed = -speed; }
         if (speed > 1){ speed = 1; }
         if (speed < -1){ speed = -1; }
         speed *= DriveConstants.kPhysicalMaxSpeedMetersPerSecond; //Scale it up to m/s
@@ -126,6 +130,33 @@ public class RunSwerveJoystick extends CommandBase {
 
         drivetrain.setModuleStates(new SwerveModuleState[] {lF, rF, rB, lB});
     }
+
+    private void runWestCoast() {
+        double YL = getYL();
+        double XR = getXR();
+
+        double left = (XR - YL) * DriveConstants.kPhysicalMaxSpeedMetersPerSecond;
+        double right = (-XR - YL)  * DriveConstants.kPhysicalMaxSpeedMetersPerSecond;
+        SwerveModuleState lF = new SwerveModuleState(left, Rotation2d.fromDegrees(0));
+        SwerveModuleState rF = new SwerveModuleState(right, Rotation2d.fromDegrees(0));
+        SwerveModuleState rB = new SwerveModuleState(right, Rotation2d.fromDegrees(0));
+        SwerveModuleState lB = new SwerveModuleState(left, Rotation2d.fromDegrees(0));
+        drivetrain.setModuleStates(new SwerveModuleState[] {lF, rF, rB, lB});
+    }
+
+    private void runTank() {
+        double YL = -getYL();
+        double YR = -getYR();
+
+        double left = YL * DriveConstants.kPhysicalMaxSpeedMetersPerSecond;
+        double right = YR * DriveConstants.kPhysicalMaxSpeedMetersPerSecond;
+        SwerveModuleState lF = new SwerveModuleState(left, Rotation2d.fromDegrees(0));
+        SwerveModuleState rF = new SwerveModuleState(right, Rotation2d.fromDegrees(0));
+        SwerveModuleState rB = new SwerveModuleState(right, Rotation2d.fromDegrees(0));
+        SwerveModuleState lB = new SwerveModuleState(left, Rotation2d.fromDegrees(0));
+        drivetrain.setModuleStates(new SwerveModuleState[] {lF, rF, rB, lB});
+    }
+
 
     @Override
     public void end(boolean interrupted) {

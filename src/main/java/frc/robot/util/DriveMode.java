@@ -12,7 +12,9 @@ public enum DriveMode {
      */
     SWERVE,
     CAR,
-    BOAT;
+    BOAT,
+    WESTCOAST,
+    TANK;
 
     public String getName() {
         if (this == FO_SWERVE) {
@@ -23,8 +25,12 @@ public enum DriveMode {
             return "Car";
         } else if (this == BOAT) {
             return "Boat";
+        }else if (this == WESTCOAST) {
+            return "West Coast";
+        }else if (this == TANK) {
+            return "Tank";
         }
-        return "";
+        return this.name();
     }
 }
 

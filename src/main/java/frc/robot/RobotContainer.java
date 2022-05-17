@@ -29,7 +29,9 @@ public class RobotContainer {
     private final JoystickButton joyBX = new JoystickButton(pJoy, 3); //Button X
     private final JoystickButton joyBY = new JoystickButton(pJoy, 4); //Button Y
     private final POVButton sJoyPOVN = new POVButton(pJoy, 0);   //POV North
+    private final POVButton sJoyPOVNE = new POVButton(pJoy, 45); //POV North East
     private final POVButton sJoyPOVS = new POVButton(pJoy, 180); //POV South
+    private final POVButton sJoyPOVSE = new POVButton(pJoy, 135); //POV North East
     private final POVButton sJoyPOVW = new POVButton(pJoy, 270); //POV West
     private final POVButton sJoyPOVE = new POVButton(pJoy, 90);  //POV East
 
@@ -61,11 +63,16 @@ public class RobotContainer {
         sJoyPOVS.whenPressed(new RunDriveMode(drivetrain, DriveMode.BOAT));
         sJoyPOVE.whenPressed(new RunDriveMode(drivetrain, DriveMode.FO_SWERVE));
         sJoyPOVW.whenPressed(new RunDriveMode(drivetrain, DriveMode.SWERVE));
+
+        sJoyPOVNE.whenPressed(new RunDriveMode(drivetrain, DriveMode.WESTCOAST));
+        sJoyPOVSE.whileHeld(new RunDriveMode(drivetrain, DriveMode.TANK));
     }
 
 
     public void updateSmartDashboard() {
         SmartDashboard.putNumber("Gyro", drivetrain.getHeading());
+        SmartDashboard.putString("Mode", drivetrain.getMode().getName());
+
         //SmartDashboard.putString("Swerve[1] Data", "A: " + round(drivetrain.leftFront.getAngle(),2) + " S: " + round(drivetrain.leftFront.getDriveVelocity(), 2));
         //SmartDashboard.putString("Swerve[2] Data", "A: " + round(drivetrain.rightFront.getAngle(),2) + " S: " + round(drivetrain.rightFront.getDriveVelocity(), 2));
         //SmartDashboard.putString("Swerve[3] Data", "A: " + round(drivetrain.rightBack.getAngle(),2) + " S: " + round(drivetrain.rightBack.getDriveVelocity(), 2));
