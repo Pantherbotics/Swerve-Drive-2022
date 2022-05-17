@@ -83,6 +83,20 @@ public class AutoPaths {
                         getAutoCmdFromTrajectories(true, "Curve")
                 )
         );
+
+        paths.add(
+                new NamedCommand(
+                        "Stress1",
+                        getAutoCmdFromTrajectories(true, "Stress1")
+                )
+        );
+
+        paths.add(
+                new NamedCommand(
+                        "Stress2",
+                        getAutoCmdFromTrajectories(true, "Stress2")
+                )
+        );
     }
 
     /**
