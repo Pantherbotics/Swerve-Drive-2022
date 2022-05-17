@@ -4,23 +4,21 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.util.*;
 
-import static frc.robot.util.MathUtils.*;
+import static frc.robot.util.MathUtils.getHeadingX;
+import static frc.robot.util.MathUtils.getHeadingY;
 
 @SuppressWarnings("unused")
 public class Drivetrain extends SubsystemBase {
-    public final SwerveModuleProto leftFront, rightFront, rightBack, leftBack;
-    public final SwerveModuleProto[] modules;
+    public final SwerveModule leftFront, rightFront, rightBack, leftBack;
+    public final SwerveModule[] modules;
     private DriveMode mode = DriveMode.FO_SWERVE;
 
     public final AHRS gyro = new AHRS(SPI.Port.kMXP);
@@ -33,7 +31,7 @@ public class Drivetrain extends SubsystemBase {
         rightFront = new SwerveModuleProto(2,  225, pid); //290
         rightBack  = new SwerveModuleProto(3,  350, pid); //90
         leftBack   = new SwerveModuleProto(4,  163, pid); //-20
-        modules = new SwerveModuleProto[] {leftFront, rightFront, rightBack, leftBack};
+        modules = new SwerveModule[] {leftFront, rightFront, rightBack, leftBack};
 
         //Zero the gyro after 1 second while it calibrates
         new Thread(() -> {

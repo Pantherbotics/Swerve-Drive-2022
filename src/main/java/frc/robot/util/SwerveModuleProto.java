@@ -152,10 +152,7 @@ public class SwerveModuleProto extends SwerveModule {
         driveEncoder.setPosition(0);
     }
 
-    /**
-     * Returns current angle (Positive CCW, Negative CW)
-     * @return the current angle of the module's wheel [-180, 180]
-     */
+    @Override
     public double getAngle() {
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
             return -(MathUtils.restrictAngle(steer.getSelectedSensorPosition()*360D/4096D + offsetDeg) - 180);
