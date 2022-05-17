@@ -97,6 +97,13 @@ public class AutoPaths {
                         getAutoCmdFromTrajectories(true, "Stress2")
                 )
         );
+
+        paths.add(
+                new NamedCommand(
+                        "Test1",
+                        getAutoCmdFromTrajectories(true, "Test1")
+                )
+        );
     }
 
     /**

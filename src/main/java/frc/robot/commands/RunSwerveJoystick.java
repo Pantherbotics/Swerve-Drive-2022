@@ -11,6 +11,8 @@ import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.util.DriveMode;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 import static frc.robot.util.MathUtils.powAxis;
@@ -56,7 +58,7 @@ public class RunSwerveJoystick extends CommandBase {
         //These adjustments for Swerve were experimentally determined... they work
         double xSpeed = -powAxis(getYL(), OIConstants.driverEXP) * speedChooser.get();
         double ySpeed = -powAxis(getXL(), OIConstants.driverEXP) * speedChooser.get();
-        double turningSpeed = -getXR() * speedChooser.get();
+        double turningSpeed = -getXR() * (speedChooser.get()/2D);
 
         // 2. Apply deadband
         xSpeed = Math.abs(xSpeed) > OIConstants.kDeadband ? xSpeed : 0.0;
@@ -79,11 +81,8 @@ public class RunSwerveJoystick extends CommandBase {
             chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
         }
 
-        // 5. Convert chassis speeds to individual module states
-        SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
-
         // 6. Output each module states to wheels
-        drivetrain.setModuleStates(moduleStates);
+        drivetrain.setModuleStates(DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds));
     }
 
     private void runBoat() {

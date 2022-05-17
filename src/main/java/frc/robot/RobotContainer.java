@@ -66,10 +66,10 @@ public class RobotContainer {
 
     public void updateSmartDashboard() {
         SmartDashboard.putNumber("Gyro", drivetrain.getHeading());
-        SmartDashboard.putString("Swerve[1] Data", "A: " + round(drivetrain.leftFront.getAngle(),2) + " S: " + round(drivetrain.leftFront.getDriveVelocity(), 2));
-        SmartDashboard.putString("Swerve[2] Data", "A: " + round(drivetrain.rightFront.getAngle(),2) + " S: " + round(drivetrain.rightFront.getDriveVelocity(), 2));
-        SmartDashboard.putString("Swerve[3] Data", "A: " + round(drivetrain.rightBack.getAngle(),2) + " S: " + round(drivetrain.rightBack.getDriveVelocity(), 2));
-        SmartDashboard.putString("Swerve[4] Data", "A: " + round(drivetrain.leftBack.getAngle(),2) + " S: " + round(drivetrain.leftBack.getDriveVelocity(), 2));
+        //SmartDashboard.putString("Swerve[1] Data", "A: " + round(drivetrain.leftFront.getAngle(),2) + " S: " + round(drivetrain.leftFront.getDriveVelocity(), 2));
+        //SmartDashboard.putString("Swerve[2] Data", "A: " + round(drivetrain.rightFront.getAngle(),2) + " S: " + round(drivetrain.rightFront.getDriveVelocity(), 2));
+        //SmartDashboard.putString("Swerve[3] Data", "A: " + round(drivetrain.rightBack.getAngle(),2) + " S: " + round(drivetrain.rightBack.getDriveVelocity(), 2));
+        //SmartDashboard.putString("Swerve[4] Data", "A: " + round(drivetrain.leftBack.getAngle(),2) + " S: " + round(drivetrain.leftBack.getDriveVelocity(), 2));
 
         SmartDashboard.putNumber("Robot Heading", drivetrain.getHeading());
 
@@ -78,7 +78,8 @@ public class RobotContainer {
         SmartDashboard.putString("Robot Location", "X: " + x + " Y: " + y);
 
         //These methods have a warning that they are noisy and may not be useful
-        SmartDashboard.putNumber("Robot Vel X", drivetrain.gyro.getVelocityX());
-        SmartDashboard.putNumber("Robot Vel Y", drivetrain.gyro.getVelocityY());
+        double vx = drivetrain.gyro.getVelocityX();
+        double vy = drivetrain.gyro.getVelocityY();
+        SmartDashboard.putNumber("Robot Vel", Math.sqrt(vx*vx + vy*vy));
     }
 }

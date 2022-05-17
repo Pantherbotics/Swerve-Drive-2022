@@ -30,6 +30,7 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         speedChooser.setDefaultOption("Normal (Fast 100%)", 1.0);
+        speedChooser.addOption("Mild (Medium 50%)", 0.5);
         speedChooser.addOption("Safe (Slow 25%)", 0.25);
         SmartDashboard.putData(speedChooser);
 

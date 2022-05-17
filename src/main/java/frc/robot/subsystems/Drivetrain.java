@@ -28,11 +28,11 @@ public class Drivetrain extends SubsystemBase {
 
     public Drivetrain() {
         PID pid = new PID(1.0, 0.0005, 0);
-        int offset = 180;
-        leftFront  = new SwerveModuleProto(1,  -55+offset, pid); //165
-        rightFront = new SwerveModuleProto(2,   45+offset, pid); //290
-        rightBack  = new SwerveModuleProto(3,  167+offset, pid); //90
-        leftBack   = new SwerveModuleProto(4,  -17+offset, pid); //-20
+        //Positive is CCW, Negative is CW
+        leftFront  = new SwerveModuleProto(1,  130, pid); //165
+        rightFront = new SwerveModuleProto(2,  225, pid); //290
+        rightBack  = new SwerveModuleProto(3,  350, pid); //90
+        leftBack   = new SwerveModuleProto(4,  163, pid); //-20
         modules = new SwerveModuleProto[] {leftFront, rightFront, rightBack, leftBack};
 
         //Zero the gyro after 1 second while it calibrates
@@ -151,7 +151,8 @@ public class Drivetrain extends SubsystemBase {
     public void setModuleStates(SwerveModuleState[] desiredStates) {
         SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
         for (int i = 0; i < 4; i++) {
-            modules[i].setDesiredState(desiredStates[i]);
+            //Optimize States (Both Teleop and Auto gives unoptimized)
+            modules[i].setDesiredState(SwerveModuleState.optimize(desiredStates[i], Rotation2d.fromDegrees(modules[i].getAngle())));
         }
     }
 }

@@ -56,7 +56,7 @@ public class Constants {
         );
 
         //Assume 4000RPM under driving load
-        public static final double kPhysicalMaxSpeedMetersPerSecond = (4000/60D) * ModuleConstants.kDriveEncoderRot2Meter; //~2.65988 m/s
+        public static final double kPhysicalMaxSpeedMetersPerSecond = (5000/60D) * ModuleConstants.kDriveEncoderRot2Meter; //~3.56 m/s
         public static final double kPhysicalMaxAngularSpeedRadiansPerSecond = Math.PI*2; //About 5 given wheelbase and drive speed
 
         public static final double kTeleDriveMaxSpeedMetersPerSecond = kPhysicalMaxSpeedMetersPerSecond; //we have about 8.7 ft/s, we don't need to reduce it
@@ -68,10 +68,10 @@ public class Constants {
 
     //Checked and verified as of May 1st, 2022
     public static final class AutoConstants {
-        public static final double kMaxSpeedMetersPerSecond = DriveConstants.kPhysicalMaxSpeedMetersPerSecond / 2.5; // ~1 m/s
+        public static final double kMaxSpeedMetersPerSecond = 2.0;
         public static final double kMaxAngularSpeedRadiansPerSecond = DriveConstants.kPhysicalMaxAngularSpeedRadiansPerSecond; //2Pi
         //All the following Constants can be tuned:
-        public static final double kMaxAccelerationMetersPerSecondSquared = 1.0;
+        public static final double kMaxAccelerationMetersPerSecondSquared = 1.5;
         public static final double kMaxAngularAccelerationRadiansPerSecondSquared = 2*Math.PI;
         public static final double kPXController = 1.5; //1.5
         public static final double kPYController = 1.5; //2.5
