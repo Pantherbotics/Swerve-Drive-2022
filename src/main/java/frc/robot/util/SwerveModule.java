@@ -37,6 +37,7 @@ abstract class SwerveModule {
 	abstract void resetEncoders();
 
 	/**
+	 * Returns current angle in rad (Positive CCW, Negative CW)
 	 * @return the current angle of the module's wheel in radians [-pi, pi]
 	 */
 	abstract double getAbsoluteEncoderRad();

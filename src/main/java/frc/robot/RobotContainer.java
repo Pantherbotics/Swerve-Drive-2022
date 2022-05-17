@@ -73,10 +73,10 @@ public class RobotContainer {
         SmartDashboard.putNumber("Gyro", drivetrain.getHeading());
         SmartDashboard.putString("Mode", drivetrain.getMode().getName());
 
-        //SmartDashboard.putString("Swerve[1] Data", "A: " + round(drivetrain.leftFront.getAngle(),2) + " S: " + round(drivetrain.leftFront.getDriveVelocity(), 2));
-        //SmartDashboard.putString("Swerve[2] Data", "A: " + round(drivetrain.rightFront.getAngle(),2) + " S: " + round(drivetrain.rightFront.getDriveVelocity(), 2));
-        //SmartDashboard.putString("Swerve[3] Data", "A: " + round(drivetrain.rightBack.getAngle(),2) + " S: " + round(drivetrain.rightBack.getDriveVelocity(), 2));
-        //SmartDashboard.putString("Swerve[4] Data", "A: " + round(drivetrain.leftBack.getAngle(),2) + " S: " + round(drivetrain.leftBack.getDriveVelocity(), 2));
+        SmartDashboard.putString("Swerve[1] Data", "A: " + round(drivetrain.leftFront.getAngle(),2) + " S: " + round(drivetrain.leftFront.getDriveVelocity(), 2));
+        SmartDashboard.putString("Swerve[2] Data", "A: " + round(drivetrain.rightFront.getAngle(),2) + " S: " + round(drivetrain.rightFront.getDriveVelocity(), 2));
+        SmartDashboard.putString("Swerve[3] Data", "A: " + round(drivetrain.rightBack.getAngle(),2) + " S: " + round(drivetrain.rightBack.getDriveVelocity(), 2));
+        SmartDashboard.putString("Swerve[4] Data", "A: " + round(drivetrain.leftBack.getAngle(),2) + " S: " + round(drivetrain.leftBack.getDriveVelocity(), 2));
 
         SmartDashboard.putNumber("Robot Heading", drivetrain.getHeading());
 

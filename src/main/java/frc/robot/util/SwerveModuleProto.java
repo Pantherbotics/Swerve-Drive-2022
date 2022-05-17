@@ -27,9 +27,6 @@ public class SwerveModuleProto extends SwerveModule {
     //    You should be able to hover over the methods to view the JavaDocs from there
     //----------------------------------------------------------------------------------------------
 
-    //TODO clarify the expected behavior of getAngle() [ccw is ... cw is ...]
-    //TODO make sense of the CANCoder pid logic in setDesiredState()
-
 
     //Module Variables
     private final int id;
@@ -125,7 +122,9 @@ public class SwerveModuleProto extends SwerveModule {
 
         //Either run the CanCoder logic for steering, or the AnalogInput logic
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
+            //Get the error for the angle, assuming + error is clockwise
             double errorAng = boundHalfDegrees(target - getAngle());
+            //Error has to be negated since Positive is CCW and Negative is CW
             double pos = steer.getSelectedSensorPosition() + (-errorAng) * (4096D/360D);
             steer.set(TalonSRXControlMode.Position, pos);
         }else {
@@ -154,7 +153,8 @@ public class SwerveModuleProto extends SwerveModule {
     }
 
     /**
-     * @return the current angle of the module's wheel [-180, 180)
+     * Returns current angle (Positive CCW, Negative CW)
+     * @return the current angle of the module's wheel [-180, 180]
      */
     public double getAngle() {
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
