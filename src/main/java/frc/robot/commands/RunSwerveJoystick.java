@@ -4,25 +4,31 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.util.DriveMode;
 
 import java.util.function.Supplier;
+
+import static frc.robot.util.MathUtils.powAxis;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class RunSwerveJoystick extends CommandBase {
     private final Drivetrain drivetrain;
-    private final Supplier<Double> xSpdFunction, ySpdFunction, turningSpdFunction;
-    private final boolean fieldOriented = true;
+    private final Joystick joystick;
+    private final Supplier<Double> speedChooser;
+    private final Supplier<DriveMode> driveMode;
     private final SlewRateLimiter xLimiter, yLimiter, turningLimiter;
 
-    public RunSwerveJoystick(Drivetrain drivetrain, Supplier<Double> xSpdFunction, Supplier<Double> ySpdFunction, Supplier<Double> turningSpdFunction) {
+    public RunSwerveJoystick(Drivetrain drivetrain, Joystick joystick, Supplier<Double> speedChooser, Supplier<DriveMode> driveMode) {
         this.drivetrain = drivetrain;
-        this.xSpdFunction = xSpdFunction;
-        this.ySpdFunction = ySpdFunction;
-        this.turningSpdFunction = turningSpdFunction;
+        this.joystick = joystick;
+        this.speedChooser = speedChooser;
+        this.driveMode = driveMode;
+
         this.xLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
         this.yLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
         this.turningLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAngularAccelerationUnitsPerSecond);
@@ -34,10 +40,23 @@ public class RunSwerveJoystick extends CommandBase {
 
     @Override
     public void execute() {
-        // 1. Get real-time joystick inputs
-        double xSpeed = xSpdFunction.get();
-        double ySpeed = ySpdFunction.get();
-        double turningSpeed = turningSpdFunction.get();
+        if (driveMode.get() == DriveMode.FO_SWERVE) {
+            runSwerve(true);
+        }else if (driveMode.get() == DriveMode.SWERVE) {
+            runSwerve(false);
+        }else if (driveMode.get() == DriveMode.BOAT) {
+            runBoat();
+        }else if (drivetrain.getMode() == DriveMode.CAR) {
+            runCar();
+        }
+    }
+
+    private void runSwerve(boolean fieldOriented) {
+        // 1. Get real-time joystick inputs, converted to work with Swerve and WPI
+        //These adjustments for Swerve were experimentally determined... they work
+        double xSpeed = -powAxis(getYL(), OIConstants.driverEXP) * speedChooser.get();
+        double ySpeed = -powAxis(getXL(), OIConstants.driverEXP) * speedChooser.get();
+        double turningSpeed = -getXR() * speedChooser.get();
 
         // 2. Apply deadband
         xSpeed = Math.abs(xSpeed) > OIConstants.kDeadband ? xSpeed : 0.0;
@@ -67,6 +86,48 @@ public class RunSwerveJoystick extends CommandBase {
         drivetrain.setModuleStates(moduleStates);
     }
 
+    private void runBoat() {
+        double YR = getYR();
+        double XR = getXR();
+
+        //Right stick speed
+        double speed = (YR*YR);//square the speed but keep the sign so it can reverse
+        if (YR < 0) { speed = -speed; }
+        if (speed > 1) { speed = 1; }
+        if (speed < -1) { speed = -1; }
+        speed *= DriveConstants.kPhysicalMaxSpeedMetersPerSecond; //Scale it up to m/s
+
+        //Calculate Steering Angle
+        double TargetAng = (XR)*90;
+        SwerveModuleState lF = new SwerveModuleState(speed, Rotation2d.fromDegrees(0));
+        SwerveModuleState rF = new SwerveModuleState(speed, Rotation2d.fromDegrees(0));
+        SwerveModuleState rB = new SwerveModuleState(speed, Rotation2d.fromDegrees(-TargetAng));
+        SwerveModuleState lB = new SwerveModuleState(speed, Rotation2d.fromDegrees(-TargetAng));
+
+        drivetrain.setModuleStates(new SwerveModuleState[] {lF, rF, rB, lB});
+    }
+
+    private void runCar() {
+        double YR = getYR();
+        double XR = getXR();
+
+        double speed = (YR*YR);//square the speed but keep the sign so it can reverse
+        if(YR < 0){ speed = -speed; }
+        if (speed > 1){ speed = 1; }
+        if (speed < -1){ speed = -1; }
+        speed *= DriveConstants.kPhysicalMaxSpeedMetersPerSecond; //Scale it up to m/s
+
+        //Calculate Steering Angle
+        double TargetAng = (XR)*90;
+
+        SwerveModuleState lF = new SwerveModuleState(speed, Rotation2d.fromDegrees(TargetAng));
+        SwerveModuleState rF = new SwerveModuleState(speed, Rotation2d.fromDegrees(TargetAng));
+        SwerveModuleState rB = new SwerveModuleState(speed, Rotation2d.fromDegrees(0));
+        SwerveModuleState lB = new SwerveModuleState(speed, Rotation2d.fromDegrees(0));
+
+        drivetrain.setModuleStates(new SwerveModuleState[] {lF, rF, rB, lB});
+    }
+
     @Override
     public void end(boolean interrupted) {
         drivetrain.stopModules();
@@ -75,5 +136,21 @@ public class RunSwerveJoystick extends CommandBase {
     @Override
     public boolean isFinished() {
         return false;
+    }
+
+    private double getXL() {
+        return joystick.getRawAxis(OIConstants.kDriverXL);
+    }
+
+    private double getYL() {
+        return joystick.getRawAxis(OIConstants.kDriverYL);
+    }
+
+    private double getXR() {
+        return joystick.getRawAxis(OIConstants.kDriverXR);
+    }
+
+    private double getYR() {
+        return joystick.getRawAxis(OIConstants.kDriverYR);
     }
 }

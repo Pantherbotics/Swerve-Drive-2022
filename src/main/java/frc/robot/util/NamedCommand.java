@@ -2,6 +2,9 @@ package frc.robot.util;
 
 import edu.wpi.first.wpilibj2.command.Command;
 
+/**
+ * A class that wraps a Command with a name
+ */
 public class NamedCommand {
     private final String name;
     private final Command comm;

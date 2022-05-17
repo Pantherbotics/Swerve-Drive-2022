@@ -4,7 +4,6 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.util.DriveMode;
 
-@SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class RunDriveMode extends CommandBase {
     private final Drivetrain drivetrain;
     private final DriveMode mode;
@@ -15,7 +14,7 @@ public class RunDriveMode extends CommandBase {
 
     @Override
     public void initialize() {
-        //drivetrain.setMode(mode);
+        drivetrain.setMode(mode);
     }
 
     @Override

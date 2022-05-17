@@ -10,55 +10,62 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
-import frc.robot.Constants.*;
+import frc.robot.Constants.DriveConstants;
 import org.jetbrains.annotations.Nullable;
 
+import static frc.robot.util.MathUtils.boundHalfDegrees;
 import static frc.robot.util.MathUtils.round;
 
 @SuppressWarnings("unused")
-public class SwerveModuleProto {
-    private final int id;
+public class SwerveModuleProto extends SwerveModule {
+    //----------------------------------------------------------------------------------------------
+    //  All of the following code is documented in the SwerveModule abstract class
+    //    You should be able to hover over the methods to view the JavaDocs from there
+    //----------------------------------------------------------------------------------------------
 
-    //Drive stuff
+    //TODO clarify the expected behavior of getAngle() [ccw is ... cw is ...]
+    //TODO make sense of the CANCoder pid logic in setDesiredState()
+
+
+    //Module Variables
+    private final int id;
+    private final double offsetDeg;
+
+    //Drive objects for the Module
     private final CANSparkMax drive;
     private final RelativeEncoder driveEncoder;
     private final SparkMaxPIDController drivePID;
 
-    //Steering stuff
+    //Steering objects for the Module (encoder will be analogInput OR canCoder)
     public final TalonSRX steer;
-    @Nullable private final AnalogInput analogInput;
-    @Nullable public final CANCoder canCoder;
+    @Nullable private final AnalogInput analogInput; //Nullable because it may not be used
+    @Nullable public final CANCoder canCoder; //Nullable because it may not be used
 
-
-    //Variable declarations
-    double kP, kI, kD, kF;
-    double potMax = 3798;
-    double sumError = 0, errorChange = 0, lastError = 0;
-    double offsetDeg;
+    //Steer PID (Manual) Variables
+    private final double kP, kI, kD;
+    private double sumError = 0, lastError = 0;
 
     /**
      * @param id ID of the module's motors
-     * @param offsetDeg Offset degrees of the module
-     * @param pid PID constants for the module steering
+     * @param offsetDeg Offset of the module in degrees
+     * @param steerPid PID constants for the module steering
      */
-    public SwerveModuleProto(int id, int offsetDeg, PID pid) {
-        kP = pid.kP; kI = pid.kI; kD = pid.kD; kF = pid.kF; this.id = id;
+    public SwerveModuleProto(int id, int offsetDeg, PID steerPid) {
+        //Store PID constants and the module offset
+        kP = steerPid.kP; kI = steerPid.kI; kD = steerPid.kD; this.id = id; this.offsetDeg = offsetDeg;
 
-        this.offsetDeg = offsetDeg;
-
+        //Create the SparkMax for the drive motor, and configure the units for its encoder
         drive = new CANSparkMax(id, MotorType.kBrushless); drive.restoreFactoryDefaults();
         driveEncoder = drive.getEncoder();
         driveEncoder.setPositionConversionFactor(Constants.ModuleConstants.kDriveEncoderRot2Meter);
         driveEncoder.setVelocityConversionFactor(Constants.ModuleConstants.kDriveEncoderRPM2MeterPerSec);
 
+        //Get the Drive PID Controller and configure it for Velocity PID
         drivePID = drive.getPIDController();
-        // set Drive motor PID coefficients
         drivePID.setP(.0001);
         drivePID.setI(0);
         drivePID.setD(.0001);
@@ -66,11 +73,12 @@ public class SwerveModuleProto {
         drivePID.setFF(.000175);
         drivePID.setOutputRange(-1, 1);
 
-        //Steering Motor setup
+        //Create the Steer TalonSRX
         steer = new TalonSRX(id);//set in id ())create talon object
 
-
+        //Create the encoder based on Constants.ModuleConstants.kSteerEncoderType
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder) {
+            //Create the CANCoder and configure it to work as the RemoteSensor0 for the steer motor
             canCoder = new CANCoder(id + 4);
             canCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
             canCoder.setPositionToAbsolute();
@@ -79,105 +87,70 @@ public class SwerveModuleProto {
             steer.config_kP(0, kP);
             steer.config_kI(0, kI);
             steer.config_kD(0, kD);
-            steer.config_kF(0, kF);
+            steer.config_kF(0, steerPid.kF);
             steer.setSelectedSensorPosition(canCoder.getAbsolutePosition());
 
             analogInput = null;
         }else {
+            //Create the AnalogInput for the Steer Encoder
             analogInput = new AnalogInput(id - 1);
             canCoder = null;
         }
 
+        //Reset the encoders
         resetEncoders();
-
-
-        // This class is what I've been searching for...
-        // RobotController.getBatteryVoltage();
-        // RobotController.getVoltage5V(); //Helpful to interpret analog inputs when source is not 5V
     }
 
+    @Override
     public double getDriveVelocity() {
         return driveEncoder.getVelocity();
     }
 
-    public void resetEncoders() {
-        driveEncoder.setPosition(0);
-        //steer.setSelectedSensorPosition(getAbsoluteEncoderRad());
+    @Override
+    public double getAbsoluteEncoderRad() {
+        return Math.toRadians(getAngle());
     }
 
-    public SwerveModuleState getState() {
-        //The TalonSRX does not have an encoder to drive its pid, it's using the analog input
-        //Probably just have to get wheel angle instead
-        //SmartDashboard.putNumber("Swerve[" + id + "] Drive Vel (RPM)", getDriveVelocity());
-        //SmartDashboard.putNumber("Swerve[" + id + "] Wheel Rot (Rad)", getTurningPosition());
-        //TODO some other teams had problems with negative velocities, I don't think we have that but check anyway
-        return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getAbsoluteEncoderRad()));
-    }
-
-
-    /**
-     * @param state The new SwerveModuleState
-     */
-    public void setDesiredState(SwerveModuleState state, boolean optimize) {
-        //If statement ignores when we let go of left stick so wheels aren't defaulting to 0 degrees
+    @Override
+    public void setDesiredState(SwerveModuleState state) {
+        //Ignore small states like when we let go of left stick so wheels don't default to 0 degrees
         if (Math.abs(state.speedMetersPerSecond) < 0.001) {
             stop();
             return;
         }
 
-        //Auto states come optimized
-        if (optimize) {
-            state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
-        }
-
-        //TODO check range of values from here, currently assuming [0, 360), could be [-180, 180]
+        //Log some info about the target state
         double target = state.angle.getDegrees();
-
         SmartDashboard.putString("Swerve[" + id + "] Set", "A: " + round(target, 1) + " S: " + round(state.speedMetersPerSecond, 1));
 
-
-        //Custom PID loop
+        //Either run the CanCoder logic for steering, or the AnalogInput logic
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
-            //target = MathUtils.restrictAngle(target + offsetDeg);
             double errorAng = boundHalfDegrees(target - getAngle());
             double pos = steer.getSelectedSensorPosition() + (-errorAng) * (4096D/360D);
-
             steer.set(TalonSRXControlMode.Position, pos);
-            //SmartDashboard.putString("[" + id + "] Data2", round(target, 3) + ":" + round(getAngle(), 3));
         }else {
             double error = getModifiedError(target);
             sumError += error * 0.02;
-            errorChange = (error-lastError)/0.02;
+            double errorChange = (error-lastError)/0.02;
             double pidOutput = error * kP + kI * sumError + kD * errorChange;
             steer.set(ControlMode.PercentOutput, pidOutput);
             lastError = error;
         }
 
-        //Drive Speed with spark
-        //drivePID.setReference(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond * Constants.neoMaxRPM, CANSparkMax.ControlType.kVelocity);
-        drive.set(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
+        //Drive Speed with spark and PID (or by percent output using the 2nd line)
+        drivePID.setReference(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond * Constants.neoMaxRPM, CANSparkMax.ControlType.kVelocity);
+        //drive.set(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
     }
 
-    public void setDesiredStateAuto(SwerveModuleState state) {
-        //state = new SwerveModuleState(state.speedMetersPerSecond, new Rotation2d(-state.angle.getRadians()));
-        //state = SwerveModuleState.optimize(state, new Rotation2d(getAbsoluteEncoderRad()));
-
-
-        //remove this when done testing
-        //state = new SwerveModuleState(state.speedMetersPerSecond/4D, Rotation2d.fromDegrees(state.angle.getDegrees()));
-        setDesiredState(state, false);
-    }
-
+    @Override
     public void stop() {
         drive.set(0);
         steer.set(ControlMode.PercentOutput, 0);
     }
 
-    /**
-     * @return the current angle of the module's wheel in radians [-pi, pi])
-     */
-    public double getAbsoluteEncoderRad() {
-        return Math.toRadians(getAngle());
+    @Override
+    public void resetEncoders() {
+        driveEncoder.setPosition(0);
     }
 
     /**
@@ -188,15 +161,11 @@ public class SwerveModuleProto {
             return -(MathUtils.restrictAngle(steer.getSelectedSensorPosition()*360D/4096D + offsetDeg) - 180);
         }else if (analogInput != null) {
             double ang = analogInput.getValue(); //analog in on the Rio
-            ang = ang*360/potMax + offsetDeg + 90; //Convert to compass type heading + offset
+            ang = ang*360/Constants.potMax + offsetDeg + 90; //Convert to compass type heading + offset
             if (ang > 360) { ang -= 360; } //correct for offset overshoot.
             return ang;
         }
         return 0;
-    }
-
-    public double getPosition() {
-        return steer.getSelectedSensorPosition();
     }
 
     /**
@@ -211,11 +180,5 @@ public class SwerveModuleProto {
      */
     public double getModifiedError(double target){
         return (boundHalfDegrees(getError(target)))/180;
-    }
-
-    public static double boundHalfDegrees(double angle_degrees) {
-        while (angle_degrees >= 180.0) angle_degrees -= 360.0;
-        while (angle_degrees < -180.0) angle_degrees += 360.0;
-        return angle_degrees;
     }
 }

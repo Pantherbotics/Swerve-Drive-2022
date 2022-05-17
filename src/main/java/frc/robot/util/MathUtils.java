@@ -1,7 +1,6 @@
 package frc.robot.util;
 
 import edu.wpi.first.wpilibj.drive.Vector2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -121,12 +120,35 @@ public class MathUtils {
 	}
 
 	/**
-	 * Returns the angle given but restricted to [0, 360)
-	 * @param angle the angle to restrict
+	 * @return the angle given but restricted to [0, 360)
+	 * @param angle the angle in degrees to restrict
 	 */
 	public static double restrictAngle(double angle) {
 		while (angle > 360) { angle -= 360; }
 		while (angle < 0) { angle += 360; }
 		return angle;
+	}
+
+	/**
+	 * @return the angle bounded to [-180, 180] degrees
+	 * @param angle the angle in degrees to bound
+	 */
+	public static double boundHalfDegrees(double angle) {
+		while (angle >= 180.0) angle -= 360.0;
+		while (angle < -180.0) angle += 360.0;
+		return angle;
+	}
+
+	/**
+	 * @param a the base
+	 * @param b the exponent
+	 * @return A to the power of B maintaining the sign of A
+	 */
+	public static double powAxis(double a, double b) {
+		if (a >= 0) {
+			return Math.pow(a, b);
+		}else {
+			return -Math.pow(-a, b);
+		}
 	}
 }

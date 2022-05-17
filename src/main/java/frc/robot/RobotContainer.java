@@ -1,19 +1,17 @@
 package frc.robot;
 
-import com.ctre.phoenix.sensors.AbsoluteSensorRange;
-import com.ctre.phoenix.sensors.CANCoder;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
-import frc.robot.Constants.OIConstants;
+import frc.robot.commands.RunDriveMode;
 import frc.robot.commands.RunSwerveJoystick;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.util.AutoPaths;
-import frc.robot.util.PID;
-import frc.robot.util.SwerveModuleProto;
+import frc.robot.util.DriveMode;
 
 import static frc.robot.util.MathUtils.round;
 
@@ -24,8 +22,8 @@ public class RobotContainer {
     public final SendableChooser<Double> speedChooser;
     public final AutoPaths autoPaths = new AutoPaths(drivetrain);
 
-    //Joysticks
-    private final XboxController pJoy = new XboxController(Constants.pJoyID);
+    //Joysticks and Buttons/Inputs
+    private final Joystick pJoy = new Joystick(Constants.OIConstants.kDriverJoyID);
     private final JoystickButton joyBA = new JoystickButton(pJoy, 1); //Button A
     private final JoystickButton joyBB = new JoystickButton(pJoy, 2); //Button B
     private final JoystickButton joyBX = new JoystickButton(pJoy, 3); //Button X
@@ -37,13 +35,12 @@ public class RobotContainer {
 
     public RobotContainer(Robot robot) {
         speedChooser = robot.speedChooser;
-        double exp = 7D/3D;
-        drivetrain.setDefaultCommand(new RunSwerveJoystick(
-                drivetrain,
-                () -> -powAxis(pJoy.getRawAxis(OIConstants.kDriverYAxis), exp)/speedChooser.getSelected(),
-                () -> -powAxis(pJoy.getRawAxis(OIConstants.kDriverXAxis), exp)/speedChooser.getSelected(),
-                () -> -pJoy.getRawAxis(OIConstants.kDriverRotAxis)/speedChooser.getSelected()));
 
+        drivetrain.setDefaultCommand(new RunSwerveJoystick(
+                drivetrain, pJoy,
+                speedChooser::getSelected,
+                drivetrain::getMode
+        ));
         //For easy calibration, use this code instead to have all wheels drive forward
         //drivetrain.setDefaultCommand(new RunSwerveJoystick(drivetrain, () -> 0.1, () -> 0.0, () -> 0.0));
 
@@ -57,18 +54,15 @@ public class RobotContainer {
      * passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
-        new JoystickButton(pJoy, 2).whenPressed(drivetrain::zeroHeading);
+        joyBB.whenPressed(drivetrain::zeroHeading);
+
+        //Configure multiple swerve modes
+        sJoyPOVN.whenPressed(new RunDriveMode(drivetrain, DriveMode.CAR));
+        sJoyPOVS.whenPressed(new RunDriveMode(drivetrain, DriveMode.BOAT));
+        sJoyPOVE.whenPressed(new RunDriveMode(drivetrain, DriveMode.FO_SWERVE));
+        sJoyPOVW.whenPressed(new RunDriveMode(drivetrain, DriveMode.SWERVE));
     }
 
-
-
-    public double powAxis(double a, double b) {
-        if (a >= 0) {
-            return Math.pow(a, b);
-        }else {
-            return -Math.pow(-a, b);
-        }
-    }
 
     public void updateSmartDashboard() {
         SmartDashboard.putNumber("Gyro", drivetrain.getHeading());
@@ -76,5 +70,11 @@ public class RobotContainer {
         SmartDashboard.putString("Swerve[2] Data", "A: " + round(drivetrain.rightFront.getAngle(),2) + " S: " + round(drivetrain.rightFront.getDriveVelocity(), 2));
         SmartDashboard.putString("Swerve[3] Data", "A: " + round(drivetrain.rightBack.getAngle(),2) + " S: " + round(drivetrain.rightBack.getDriveVelocity(), 2));
         SmartDashboard.putString("Swerve[4] Data", "A: " + round(drivetrain.leftBack.getAngle(),2) + " S: " + round(drivetrain.leftBack.getDriveVelocity(), 2));
+
+        SmartDashboard.putNumber("Robot Heading", drivetrain.getHeading());
+
+        double x = round(drivetrain.getPose().getTranslation().getX(),3);
+        double y = round(drivetrain.getPose().getTranslation().getY(),3);
+        SmartDashboard.putString("Robot Location", "X: " + x + " Y: " + y);
     }
 }

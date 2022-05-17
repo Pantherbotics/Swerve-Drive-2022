@@ -5,10 +5,6 @@ import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -21,9 +17,8 @@ import java.util.List;
 
 
 //-------------------------------------------------------------------------------------------------
-//      PathWeaver Notes:
-// 1. In order to go backwards, you must keep track of the start and end nodes, and reverse the spline
-// 2.
+//      PathPlanner Notes:
+// 1. When picking up game pieces, remember you can reverse a point so the robot bounces back from it (quicker)
 //-------------------------------------------------------------------------------------------------
 
 @SuppressWarnings("unused")
@@ -36,10 +31,9 @@ public class AutoPaths {
     private final PIDController yController = new PIDController(Constants.AutoConstants.kPYController, 0, 0);
     private final ProfiledPIDController thetaController = new ProfiledPIDController(Constants.AutoConstants.kPThetaController, 0, 0, Constants.AutoConstants.kThetaControllerConstraints);
 
-
     public AutoPaths(Drivetrain drivetrain) {
         this.drivetrain = drivetrain;
-        thetaController.enableContinuousInput(-Math.PI, Math.PI);
+        thetaController.enableContinuousInput(-Math.PI, Math.PI); //Hmm, indicates the gyro should be [-pi, pi]
 
         paths.add(
                 new NamedCommand(
@@ -89,23 +83,13 @@ public class AutoPaths {
                         getAutoCmdFromTrajectories(true, "Curve")
                 )
         );
-
-        /*
-        TrajectoryConfig trajectoryConfig = new TrajectoryConfig(Constants.AutoConstants.kMaxSpeedMetersPerSecond, Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared).setKinematics(Constants.DriveConstants.kDriveKinematics);
-        paths.add(
-                new NamedCommand(
-                        "Test",
-                        wrapTrajectories(true, (PathPlannerTrajectory) TrajectoryGenerator.generateTrajectory(
-                                new Pose2d(2, 2, Rotation2d.fromDegrees(0.0)),
-                                List.of(),
-                                new Pose2d(4, 2, Rotation2d.fromDegrees(90)),
-                                trajectoryConfig
-                        ))
-                )
-        );
-        */
     }
 
+    /**
+     * @param firstTraj If the trajectory is the first trajectory in the path, and should have the odometry calibrated
+     * @param trajectoryNames The names of the trajectories to be loaded
+     * @return the Command that will run the controller to follow the trajectories
+     */
     public @Nullable Command getAutoCmdFromTrajectories(boolean firstTraj, String... trajectoryNames) {
         List<PathPlannerTrajectory> trajectories = new ArrayList<>();
         for (String name : trajectoryNames) {
@@ -114,28 +98,39 @@ public class AutoPaths {
         return wrapTrajectories(firstTraj, trajectories.toArray(PathPlannerTrajectory[]::new));
     }
 
+    /**
+     * @param name The name of the trajectory to load
+     * @return The PathPlannerTrajectory loaded from the trajectory file
+     */
     private PathPlannerTrajectory loadTrajectory(String name) {
+        //Load the PathPlannerTrajectory using PathPlanner's library
         return PathPlanner.loadPath(name, Constants.AutoConstants.kMaxSpeedMetersPerSecond, Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared);
     }
 
+    /**
+     * @param firstTraj If the trajectory is the first trajectory in the path, and should have the odometry calibrated
+     * @param trajectories The trajectories to be wrapped together
+     * @return the Command that will run the controller to follow the trajectories
+     */
     private @Nullable Command wrapTrajectories(boolean firstTraj, PathPlannerTrajectory... trajectories) {
+        //Add a check in case trajectories are null, or empty (maybe the default is no auto, stuff like that)
         if (trajectories == null || trajectories.length == 0) { return null; }
 
+        //Compile a list of commands of PPSwerveControllerCommand to follow the trajectories
         List<Command> commands = new ArrayList<>();
         for (PathPlannerTrajectory trajectory : trajectories) {
             // Construct command to follow trajectory
             commands.add(new PPSwerveControllerCommand(
                     trajectory, drivetrain::getPose, Constants.DriveConstants.kDriveKinematics,
                     xController, yController, thetaController,
-                    drivetrain::setModuleStatesAuto, drivetrain
+                    drivetrain::setModuleStates, drivetrain
             ));
         }
 
-        //Add some init and wrap-up commands (Zero odometry before, and stop modules after)
+        //Add the initial command to calibrate the odometry
         if (firstTraj) {
             commands.add(0, new InstantCommand(() -> drivetrain.resetOdometry(trajectories[0].getInitialPose())));
         }
-        //commands.add(new InstantCommand(drivetrain::stopModules));
         return new SequentialCommandGroup(commands.toArray(Command[]::new));
     }
 }

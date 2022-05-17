@@ -5,8 +5,8 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 
-@SuppressWarnings({"unused"})
 public class Constants {
+    @SuppressWarnings("unused")
     public enum EncoderType {
         Potentiometer, CanCoder
     }
@@ -25,25 +25,20 @@ public class Constants {
 
     public static final double neoMaxRPM = 4000;
 
-    //Joysticks
-    public static final int pJoyID = 0;
-
-    //Drivetrain
-    public static final double angleGearRatio = 1.0; //TODO: Calculate this (We have below, sort of)
 
     //Checked and verified as of May 1st, 2022
     public static final class ModuleConstants {
         public static final double kWheelDiameterMeters = Units.inchesToMeters(4); //4 when new
         public static final double kDriveMotorGearRatio = 2/15D; // 12:30 then 15:45
-        public static final double kTurningMotorGearRatio = 0.036; // 12:100 then 18:60
+        //public static final double kTurningMotorGearRatio = 0.036; // 12:100 then 18:60
         public static final double kDriveEncoderRot2Meter = kDriveMotorGearRatio * Math.PI * kWheelDiameterMeters;
-        public static final double kTurningEncoderRot2Rad = kTurningMotorGearRatio * 2 * Math.PI;
+        //public static final double kTurningEncoderRot2Rad = kTurningMotorGearRatio * 2 * Math.PI;
         public static final double kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter / 60;
-        public static final double kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad / 60;
+        //public static final double kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad / 60;
 
-        public static final double kPTurning = 0.25;
-        public static final double kITurning = 0.0;
-        public static final double kDTurning = 0.0;
+        //public static final double kPTurning = 0.25;
+        //public static final double kITurning = 0.0;
+        //public static final double kDTurning = 0.0;
     }
 
     //Checked and verified as of May 1st, 2022
@@ -90,10 +85,12 @@ public class Constants {
 
     //Checked and verified as of May 1st, 2022
     public static final class OIConstants {
-        public static final int kDriverYAxis = 1;
-        public static final int kDriverXAxis = 0;
-        public static final int kDriverRotAxis = 4;
-        public static final int kDriverFieldOrientedButtonIdx = 1;
+        public static final int kDriverJoyID = 0;
+        public static final int kDriverXL = 0;
+        public static final int kDriverYL = 1;
+        public static final int kDriverXR = 4;
+        public static final int kDriverYR = 5;
+        public static final double driverEXP = 7D/3D; //Exponentiate the joystick values to have finer control at low values
 
         public static final double kDeadband = 0.04; //Higher than average on the controller I'm using
     }

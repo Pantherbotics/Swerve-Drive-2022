@@ -29,11 +29,10 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotInit() {
-        speedChooser.setDefaultOption("Normal (Fast)", 1.0);
-        speedChooser.addOption("Safe (Slow)", 4.0);
+        speedChooser.setDefaultOption("Normal (Fast 100%)", 1.0);
+        speedChooser.addOption("Safe (Slow 25%)", 0.25);
         SmartDashboard.putData(speedChooser);
 
-        //Load trajectories before robotContainer, which requires them for auto paths
         robotContainer = new RobotContainer(this);
 
         autoChooser.setDefaultOption("None", null);

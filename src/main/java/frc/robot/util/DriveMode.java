@@ -8,13 +8,7 @@ public enum DriveMode {
     FO_SWERVE,
 
     /**
-     * Gyro Stabilized Swerve
-     * - Maintains rotation while driving around using gyro.
-     */
-    GS_SWERVE,
-
-    /**
-     * Regular Swerve W/O any Gyro Alignment
+     * Regular Swerve modes W/O any Gyro Alignment
      */
     SWERVE,
     CAR,
