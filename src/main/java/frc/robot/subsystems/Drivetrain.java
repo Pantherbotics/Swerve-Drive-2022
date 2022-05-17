@@ -23,7 +23,7 @@ public class Drivetrain extends SubsystemBase {
     public final SwerveModuleProto[] modules;
     private DriveMode mode = DriveMode.FO_SWERVE;
 
-    private final AHRS gyro = new AHRS(SPI.Port.kMXP);
+    public final AHRS gyro = new AHRS(SPI.Port.kMXP);
     private final Odometer odometer = new Odometer(); //Custom odometer that works for Holonomic Swerve
 
     public Drivetrain() {

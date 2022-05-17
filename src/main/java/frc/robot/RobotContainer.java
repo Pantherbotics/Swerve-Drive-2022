@@ -76,5 +76,9 @@ public class RobotContainer {
         double x = round(drivetrain.getPose().getTranslation().getX(),3);
         double y = round(drivetrain.getPose().getTranslation().getY(),3);
         SmartDashboard.putString("Robot Location", "X: " + x + " Y: " + y);
+
+        //These methods have a warning that they are noisy and may not be useful
+        SmartDashboard.putNumber("Robot Vel X", drivetrain.gyro.getVelocityX());
+        SmartDashboard.putNumber("Robot Vel Y", drivetrain.gyro.getVelocityY());
     }
 }
