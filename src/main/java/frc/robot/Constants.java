@@ -23,7 +23,7 @@ public class Constants {
     //If using the Potentiometer, this specifies its max value so we can get the angle
     public static final double potMax = 3798;
 
-    public static final double neoMaxRPM = 4000;
+    public static final double neoMaxRPM = 5676; //4000 realistically but we need speeeeeed
 
 
     //Checked and verified as of May 1st, 2022
