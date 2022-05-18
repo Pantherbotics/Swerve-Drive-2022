@@ -23,22 +23,26 @@ public class Constants {
     //If using the Potentiometer, this specifies its max value so we can get the angle
     public static final double potMax = 3798;
 
-    public static final double neoMaxRPM = 5676; //4000 realistically but we need speeeeeed
+    public static final double neoMaxRPM = 5000; //5000 was experimentally determined from our swerve chassis
 
 
     //Checked and verified as of May 1st, 2022
     public static final class ModuleConstants {
         public static final double kWheelDiameterMeters = Units.inchesToMeters(4); //4 when new
         public static final double kDriveMotorGearRatio = 2/15D; // 12:30 then 15:45
-        //public static final double kTurningMotorGearRatio = 0.036; // 12:100 then 18:60
         public static final double kDriveEncoderRot2Meter = kDriveMotorGearRatio * Math.PI * kWheelDiameterMeters;
-        //public static final double kTurningEncoderRot2Rad = kTurningMotorGearRatio * 2 * Math.PI;
         public static final double kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter / 60;
+
+        //These were calculated for our swerve modules, but position PID based on the angle means they aren't needed
+        //public static final double kTurningMotorGearRatio = 0.036; // 12:100 then 18:60
+        //public static final double kTurningEncoderRot2Rad = kTurningMotorGearRatio * 2 * Math.PI;
         //public static final double kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad / 60;
 
-        //public static final double kPTurning = 0.25;
-        //public static final double kITurning = 0.0;
-        //public static final double kDTurning = 0.0;
+        //These values will need to be calibrated when swapping between CANCoders and Potentiometers
+        public static final double kPTurning = 1.0;
+        public static final double kITurning = 0.0005;
+        public static final double kDTurning = 0.0;
+        public static final double kFTurning = 0.0;
     }
 
     //Checked and verified as of May 1st, 2022
@@ -55,12 +59,11 @@ public class Constants {
                 new Translation2d(-kWheelBase / 2,  kTrackWidth / 2)   //Left Back
         );
 
-        //Assume 4000RPM under driving load
-        public static final double kPhysicalMaxSpeedMetersPerSecond = (5000/60D) * ModuleConstants.kDriveEncoderRot2Meter; //~3.56 m/s
-        public static final double kPhysicalMaxAngularSpeedRadiansPerSecond = Math.PI*2; //About 5 given wheelbase and drive speed
+        public static final double kPhysicalMaxSpeedMetersPerSecond = (neoMaxRPM/60D) * ModuleConstants.kDriveEncoderRot2Meter; //~3.56 m/s
+        public static final double kPhysicalMaxAngularSpeedRadiansPerSecond = Math.PI*2; //About 2PI given wheelbase and drive speed
 
-        public static final double kTeleDriveMaxSpeedMetersPerSecond = kPhysicalMaxSpeedMetersPerSecond; //we have about 8.7 ft/s, we don't need to reduce it
-        public static final double kTeleDriveMaxAngularSpeedRadiansPerSecond = kPhysicalMaxAngularSpeedRadiansPerSecond; //307 degrees per second doesn't need to be reduced
+        public static final double kTeleDriveMaxSpeedMetersPerSecond = kPhysicalMaxSpeedMetersPerSecond; //we have about 11.68 ft/s, we don't need to reduce it
+        public static final double kTeleDriveMaxAngularSpeedRadiansPerSecond = kPhysicalMaxAngularSpeedRadiansPerSecond; //360 degrees per second doesn't need to be reduced
         //These values could be tuned:
         public static final double kTeleDriveMaxAccelerationUnitsPerSecond = 1.5;
         public static final double kTeleDriveMaxAngularAccelerationUnitsPerSecond = 1.5;
@@ -73,9 +76,9 @@ public class Constants {
         //All the following Constants can be tuned:
         public static final double kMaxAccelerationMetersPerSecondSquared = 1.5;
         public static final double kMaxAngularAccelerationRadiansPerSecondSquared = 2*Math.PI;
-        public static final double kPXController = 1.5; //1.5
-        public static final double kPYController = 1.5; //2.5
-        public static final double kPThetaController = 3.0; //3
+        public static final double kPXController = 1.5;
+        public static final double kPYController = 1.5;
+        public static final double kPThetaController = 3.0;
 
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
                 new TrapezoidProfile.Constraints(

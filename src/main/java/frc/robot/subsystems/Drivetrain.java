@@ -25,12 +25,11 @@ public class Drivetrain extends SubsystemBase {
     private final Odometer odometer = new Odometer(); //Custom odometer that works for Holonomic Swerve
 
     public Drivetrain() {
-        PID pid = new PID(1.0, 0.0005, 0);
         //Positive is CCW, Negative is CW
-        leftFront  = new SwerveModuleProto(1,  130, pid); //165
-        rightFront = new SwerveModuleProto(2,  225, pid); //290
-        rightBack  = new SwerveModuleProto(3,  350, pid); //90
-        leftBack   = new SwerveModuleProto(4,  163, pid); //-20
+        leftFront  = new SwerveModuleProto(1,  130); //165
+        rightFront = new SwerveModuleProto(2,  225); //290
+        rightBack  = new SwerveModuleProto(3,  350); //90
+        leftBack   = new SwerveModuleProto(4,  163); //-20
         modules = new SwerveModule[] {leftFront, rightFront, rightBack, leftBack};
 
         //Zero the gyro after 1 second while it calibrates

@@ -43,17 +43,19 @@ public class SwerveModuleProto extends SwerveModule {
     @Nullable public final CANCoder canCoder; //Nullable because it may not be used
 
     //Steer PID (Manual) Variables
-    private final double kP, kI, kD;
+    private final double kP = Constants.ModuleConstants.kPTurning;
+    private final double kI = Constants.ModuleConstants.kITurning;
+    private final double kD = Constants.ModuleConstants.kDTurning;
+    private final double kF = Constants.ModuleConstants.kFTurning;
+
     private double sumError = 0, lastError = 0;
 
     /**
      * @param id ID of the module's motors
      * @param offsetDeg Offset of the module in degrees
-     * @param steerPid PID constants for the module steering
      */
-    public SwerveModuleProto(int id, int offsetDeg, PID steerPid) {
-        //Store PID constants and the module offset
-        kP = steerPid.kP; kI = steerPid.kI; kD = steerPid.kD; this.id = id; this.offsetDeg = offsetDeg;
+    public SwerveModuleProto(int id, int offsetDeg) {
+        this.id = id; this.offsetDeg = offsetDeg;
 
         //Create the SparkMax for the drive motor, and configure the units for its encoder
         drive = new CANSparkMax(id, MotorType.kBrushless); drive.restoreFactoryDefaults();
@@ -76,7 +78,7 @@ public class SwerveModuleProto extends SwerveModule {
         //Create the encoder based on Constants.ModuleConstants.kSteerEncoderType
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder) {
             //Create the CANCoder and configure it to work as the RemoteSensor0 for the steer motor
-            canCoder = new CANCoder(id + 4);
+            canCoder = new CANCoder(id + 4); //Our CANCoders are configured to be IDs 5-8
             canCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
             canCoder.setPositionToAbsolute();
             steer.configRemoteFeedbackFilter(canCoder, 0);
@@ -84,7 +86,7 @@ public class SwerveModuleProto extends SwerveModule {
             steer.config_kP(0, kP);
             steer.config_kI(0, kI);
             steer.config_kD(0, kD);
-            steer.config_kF(0, steerPid.kF);
+            steer.config_kF(0, kF);
             steer.setSelectedSensorPosition(canCoder.getAbsolutePosition());
 
             analogInput = null;
@@ -125,13 +127,14 @@ public class SwerveModuleProto extends SwerveModule {
             //Get the error for the angle, assuming + error is clockwise
             double errorAng = boundHalfDegrees(target - getAngle());
             //Error has to be negated since Positive is CCW and Negative is CW for our swerve modules
+            //Convert [0, 360) in degrees to [0, 4906] in ticks (TalonSRX reads 4096 ticks from 360 degrees)
             double pos = steer.getSelectedSensorPosition() + (-errorAng) * (4096D/360D);
             steer.set(TalonSRXControlMode.Position, pos);
         }else {
             double error = getModifiedError(target);
             sumError += error * 0.02;
             double errorChange = (error-lastError)/0.02;
-            double pidOutput = error * kP + kI * sumError + kD * errorChange;
+            double pidOutput = error * kP + kI * sumError + kD * errorChange + kF;
             steer.set(ControlMode.PercentOutput, pidOutput);
             lastError = error;
         }
