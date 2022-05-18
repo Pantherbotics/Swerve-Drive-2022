@@ -19,10 +19,10 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
-import frc.robot.util.NamedCommand;
+import frc.robot.util.NamedAuto;
 
 public class Robot extends TimedRobot {
-    public final SendableChooser<NamedCommand> autoChooser = new SendableChooser<>();
+    public final SendableChooser<NamedAuto> autoChooser = new SendableChooser<>();
     public final SendableChooser<Double> speedChooser = new SendableChooser<>();
     private Command autonomousCommand;
     private RobotContainer robotContainer;
@@ -37,16 +37,25 @@ public class Robot extends TimedRobot {
         robotContainer = new RobotContainer(this);
 
         autoChooser.setDefaultOption("None", null);
-        for (NamedCommand command : robotContainer.autoPaths.paths) {
+        for (NamedAuto command : robotContainer.autoPaths.paths) {
             autoChooser.addOption(command.getName(), command);
         }
         SmartDashboard.putData(autoChooser);
     }
 
+    private String autoName = "";
     @Override
     public void robotPeriodic() {
         CommandScheduler.getInstance().run();
         robotContainer.updateSmartDashboard();
+
+        //Listen for a change in the autonomous chooser so that we can reset the odometry before the match starts
+        // This is not necessary but will help since we can see the change on the dashboard before the match starts
+        NamedAuto auto = autoChooser.getSelected();
+        if (auto != null && !auto.getName().equals(autoName) && auto.getStartPose() != null) {
+            autoName = auto.getName();
+            robotContainer.drivetrain.resetOdometry(auto.getStartPose());
+        }
     }
 
     @Override
@@ -69,7 +78,7 @@ public class Robot extends TimedRobot {
     public void autonomousInit() {
         autonomousCommand = autoChooser.getSelected().getCommand();
 
-        // schedule the autonomous command (example)
+        // Schedule the autonomous command if there is one
         if (autonomousCommand != null) {
             autonomousCommand.schedule();
         }

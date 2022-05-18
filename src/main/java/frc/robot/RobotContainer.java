@@ -18,7 +18,7 @@ import static frc.robot.util.MathUtils.round;
 @SuppressWarnings("unused")
 public class RobotContainer {
     //Subsystems
-    private final Drivetrain drivetrain = new Drivetrain();
+    public final Drivetrain drivetrain = new Drivetrain();
     public final SendableChooser<Double> speedChooser;
     public final AutoPaths autoPaths = new AutoPaths(drivetrain);
 
