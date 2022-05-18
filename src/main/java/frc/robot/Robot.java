@@ -15,6 +15,9 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -36,7 +39,7 @@ public class Robot extends TimedRobot {
 
         robotContainer = new RobotContainer(this);
 
-        autoChooser.setDefaultOption("None", null);
+        autoChooser.setDefaultOption("None", new NamedAuto("None", (Command) null));
         for (NamedAuto command : robotContainer.autoPaths.paths) {
             autoChooser.addOption(command.getName(), command);
         }
@@ -52,9 +55,14 @@ public class Robot extends TimedRobot {
         //Listen for a change in the autonomous chooser so that we can reset the odometry before the match starts
         // This is not necessary but will help since we can see the change on the dashboard before the match starts
         NamedAuto auto = autoChooser.getSelected();
-        if (auto != null && !auto.getName().equals(autoName) && auto.getStartPose() != null) {
+        if (auto != null && !auto.getName().equals(autoName)) {
             autoName = auto.getName();
-            robotContainer.drivetrain.resetOdometry(auto.getStartPose());
+            //If the pose is valid, reset the odometry with it
+            if (auto.getStartPose() != null) {
+                robotContainer.drivetrain.resetOdometry(auto.getStartPose());
+            }else { //Else, reset the odometry to 0 degrees at 0,0
+                robotContainer.drivetrain.resetOdometry(new Pose2d(new Translation2d(0, 0), Rotation2d.fromDegrees(0)));
+            }
         }
     }
 
