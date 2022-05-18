@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import static frc.robot.util.MathUtils.boundHalfDegrees;
 import static frc.robot.util.MathUtils.round;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class SwerveModuleProto extends SwerveModule {
     //----------------------------------------------------------------------------------------------
     //  All of the following code is documented in the SwerveModule abstract class
@@ -146,7 +146,8 @@ public class SwerveModuleProto extends SwerveModule {
 
     @Override
     public void stop() {
-        drive.set(0);
+        drivePID.setReference(0, CANSparkMax.ControlType.kVelocity);
+        //drive.set(0);
         steer.set(ControlMode.PercentOutput, 0);
     }
 
