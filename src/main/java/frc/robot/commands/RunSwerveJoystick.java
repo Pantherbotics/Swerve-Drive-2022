@@ -11,8 +11,6 @@ import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.util.DriveMode;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Supplier;
 
 import static frc.robot.util.MathUtils.powAxis;
@@ -31,6 +29,7 @@ public class RunSwerveJoystick extends CommandBase {
         this.speedChooser = speedChooser;
         this.driveMode = driveMode;
 
+        //These limiters help to smooth out the joystick input by limiting the acceleration during sudden changes
         this.xLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
         this.yLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
         this.turningLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAngularAccelerationUnitsPerSecond);
@@ -58,8 +57,16 @@ public class RunSwerveJoystick extends CommandBase {
     }
 
     private void runSwerve(boolean fieldOriented) {
+        //Background on the speed values:
+        // - YL is positive when pulled BACKWARDS, and negative when pushed FORWARDS (not intuitive)
+        // - XL is positive when pushed to the right, and negative when pushed to the left (normal)
+        // - The Y axis on the joystick should control X (forward/backward) movement of the robot, and vice versa
+        // - In order for the Y axis (negative when forward) to drive X forward (positive), it needs to be negated
+        // - In order for the X axis to control the expected Y axis movement of positive to the left, it is also negated
+        // - XR is positive when pushed to the right, and negative when pushed to the left (normal)
+        // - In order for XR to follow the positive CCW of the gyro, it needs to be negated
+
         // 1. Get real-time joystick inputs, converted to work with Swerve and WPI
-        //These adjustments for Swerve were experimentally determined... they work
         double xSpeed = -powAxis(getYL(), OIConstants.driverEXP) * speedChooser.get();
         double ySpeed = -powAxis(getXL(), OIConstants.driverEXP) * speedChooser.get();
         double turningSpeed = -getXR() * (speedChooser.get()/2D);
@@ -72,8 +79,7 @@ public class RunSwerveJoystick extends CommandBase {
         // 3. Make the driving smoother
         xSpeed = xLimiter.calculate(xSpeed) * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
         ySpeed = yLimiter.calculate(ySpeed) * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
-        turningSpeed = turningLimiter.calculate(turningSpeed)
-                * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond;
+        turningSpeed = turningLimiter.calculate(turningSpeed) * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond;
 
         // 4. Construct desired chassis speeds
         ChassisSpeeds chassisSpeeds;
@@ -85,12 +91,12 @@ public class RunSwerveJoystick extends CommandBase {
             chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
         }
 
-        // 6. Output each module states to wheels
+        // 5. Output each module states to wheels
         drivetrain.setModuleStates(DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds));
     }
 
     private void runBoat() {
-        double YL = -getYL();
+        double YL = -getYL(); //We need to invert the Y axis so that positive is forwards
         double XR = getXR();
 
         //Right stick speed
@@ -111,8 +117,8 @@ public class RunSwerveJoystick extends CommandBase {
     }
 
     private void runCar() {
-        double YL = -getYL();
-        double XR = -getXR();
+        double YL = -getYL(); //We need to invert the Y axis so that positive is forwards
+        double XR = -getXR(); //The swerve follows positive CCW wheel angles, so to turn the wheel left we must have a positive XR
 
         double speed = (YL*YL);//square the speed but keep the sign so it can reverse
         if(YL < 0){ speed = -speed; }
@@ -132,9 +138,11 @@ public class RunSwerveJoystick extends CommandBase {
     }
 
     private void runWestCoast() {
+        //No negation of these values since the west coast code we use is already handling the inverted Y axis
         double YL = getYL();
         double XR = getXR();
 
+        //Y axis weirdness handled here already
         double left = (XR - YL) * DriveConstants.kPhysicalMaxSpeedMetersPerSecond;
         double right = (-XR - YL)  * DriveConstants.kPhysicalMaxSpeedMetersPerSecond;
         SwerveModuleState lF = new SwerveModuleState(left, Rotation2d.fromDegrees(0));
@@ -145,8 +153,8 @@ public class RunSwerveJoystick extends CommandBase {
     }
 
     private void runTank() {
-        double YL = -getYL();
-        double YR = -getYR();
+        double YL = -getYL(); //Invert the Y axis so that positive is forwards
+        double YR = -getYR(); //Invert the Y axis so that positive is forwards
 
         double left = YL * DriveConstants.kPhysicalMaxSpeedMetersPerSecond;
         double right = YR * DriveConstants.kPhysicalMaxSpeedMetersPerSecond;
@@ -168,18 +176,30 @@ public class RunSwerveJoystick extends CommandBase {
         return false;
     }
 
+    /**
+     * @return The X axis value of the left joystick. It should be positive to the right.
+     */
     private double getXL() {
         return joystick.getRawAxis(OIConstants.kDriverXL);
     }
 
+    /**
+     * @return The Y axis value of the left joystick. It should be NEGATIVE when forwards.
+     */
     private double getYL() {
         return joystick.getRawAxis(OIConstants.kDriverYL);
     }
 
+    /**
+     * @return The X axis value of the right joystick. It should be positive to the right.
+     */
     private double getXR() {
         return joystick.getRawAxis(OIConstants.kDriverXR);
     }
 
+    /**
+     * @return The Y axis value of the right joystick. It should be NEGATIVE when forwards.
+     */
     private double getYR() {
         return joystick.getRawAxis(OIConstants.kDriverYR);
     }
