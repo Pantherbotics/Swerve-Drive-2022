@@ -124,7 +124,7 @@ public class SwerveModuleProto extends SwerveModule {
         if (Constants.kEncoderType == Constants.EncoderType.CanCoder && canCoder != null) {
             //Get the error for the angle, assuming + error is clockwise
             double errorAng = boundHalfDegrees(target - getAngle());
-            //Error has to be negated since Positive is CCW and Negative is CW
+            //Error has to be negated since Positive is CCW and Negative is CW for our swerve modules
             double pos = steer.getSelectedSensorPosition() + (-errorAng) * (4096D/360D);
             steer.set(TalonSRXControlMode.Position, pos);
         }else {
