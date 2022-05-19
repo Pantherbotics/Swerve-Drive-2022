@@ -46,7 +46,7 @@ public class Drivetrain extends SubsystemBase {
         gyro.reset();
     }
 
-    private double autoGyroInit = 0;
+    public double autoGyroInit = 0;
     /**
      * Get the rotation of the robot (positive CCW, negative CW)
      * @return the current heading of the robot in degrees [-180, 180]
@@ -67,10 +67,10 @@ public class Drivetrain extends SubsystemBase {
      * Reset the odometer to the specified pose
      * @param pose The new pose
      */
-    public void resetOdometry(Pose2d pose) {
+    public void resetOdometry(Rotation2d rotation, Pose2d pose) {
         //When the auto starts it will reset the odometry. If the robot's rotation isn't 0 at the start, configure the gyro
         // to report correct values for the rest of the match.
-        autoGyroInit = pose.getRotation().getDegrees();
+        autoGyroInit = rotation.getDegrees();
         odometer.resetPosition(pose);
     }
 

@@ -2,6 +2,7 @@ package frc.robot.util;
 
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,22 +12,25 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class NamedAuto {
     private final String name;
+    @Nullable private final Rotation2d startRotation;
     @Nullable private final Pose2d startPose;
     @Nullable private final Command command;
 
     public NamedAuto(String name, @Nullable Command command) {
         this.name = name;
         this.command = command;
+        this.startRotation = null;
         this.startPose = null;
     }
 
-    public NamedAuto(String name, @Nullable Pair<Command, Pose2d> data) {
+    public NamedAuto(String name, @Nullable Tuple<Command, Rotation2d, Pose2d> data) {
         this.name = name;
         if (data == null) {
-            this.command = null; this.startPose = null;
+            this.command = null; this.startRotation = null; this.startPose = null;
         }else {
-            this.command = data.getFirst();
-            this.startPose = data.getSecond();
+            this.command = data.getA();
+            this.startRotation = data.getB();
+            this.startPose = data.getC();
         }
     }
 
@@ -38,7 +42,12 @@ public class NamedAuto {
         return command;
     }
 
+    public @Nullable Rotation2d getStartRotation() {
+        return startRotation;
+    }
+
     public @Nullable Pose2d getStartPose() {
         return startPose;
     }
+
 }

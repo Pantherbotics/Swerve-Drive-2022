@@ -18,6 +18,7 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -58,10 +59,12 @@ public class Robot extends TimedRobot {
         if (auto != null && !auto.getName().equals(autoName)) {
             autoName = auto.getName();
             //If the pose is valid, reset the odometry with it
-            if (auto.getStartPose() != null) {
-                robotContainer.drivetrain.resetOdometry(auto.getStartPose());
+            if (auto.getStartPose() != null && auto.getStartRotation() != null) {
+                DriverStation.reportError(auto.getStartPose().toString(), false);
+                robotContainer.drivetrain.resetOdometry(auto.getStartRotation(), auto.getStartPose());
             }else { //Else, reset the odometry to 0 degrees at 0,0
-                robotContainer.drivetrain.resetOdometry(new Pose2d(new Translation2d(0, 0), Rotation2d.fromDegrees(0)));
+                DriverStation.reportError("0 StartPose", false);
+                robotContainer.drivetrain.resetOdometry(Rotation2d.fromDegrees(0), new Pose2d(new Translation2d(0, 0), Rotation2d.fromDegrees(0)));
             }
         }
     }
