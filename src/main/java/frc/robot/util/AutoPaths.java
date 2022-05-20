@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Constants;
 import frc.robot.subsystems.Drivetrain;
+import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class AutoPaths {
     private final Drivetrain drivetrain;
-    public ArrayList<NamedAuto> paths = new ArrayList<>();
+    @Getter private final ArrayList<NamedAuto> paths = new ArrayList<>();
 
     //Define PID controllers for tracking trajectory
     private final PIDController xController = new PIDController(Constants.AutoConstants.kPXController, 0, 0);

@@ -3,6 +3,7 @@ package frc.robot.util;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import lombok.Getter;
 
 /**
  * The PID class wraps PIDF, allowedError and maxPower variables
@@ -10,12 +11,12 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
  */
 @SuppressWarnings("unused")
 public class PID {
-    public final double kP;
-    public final double kI;
-    public final double kD;
-    public final double kF;
-    public final double allowedError;
-    public final double maxPower;
+    @Getter private final double kP;
+    @Getter private final double kI;
+    @Getter private final double kD;
+    @Getter private final double kF;
+    @Getter private final double allowedError;
+    @Getter private final double maxPower;
     public PID(double kP, double kI, double kD, double kF, double allowedError, double maxPower) {
         this.kP = kP;
         this.kI = kI;

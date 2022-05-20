@@ -38,9 +38,9 @@ public class SwerveModuleProto extends SwerveModule {
     private final SparkMaxPIDController drivePID;
 
     //Steering objects for the Module (encoder will be analogInput OR canCoder)
-    public final TalonSRX steer;
+    private final TalonSRX steer;
     @Nullable private final AnalogInput analogInput; //Nullable because it may not be used
-    @Nullable public final CANCoder canCoder; //Nullable because it may not be used
+    @Nullable private final CANCoder canCoder; //Nullable because it may not be used
 
     //Steer PID (Manual) Variables
     private final double kP = Constants.ModuleConstants.kPTurning;

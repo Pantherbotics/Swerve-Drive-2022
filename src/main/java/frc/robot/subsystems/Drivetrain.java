@@ -6,24 +6,27 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.util.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import static frc.robot.util.MathUtils.getHeadingX;
 import static frc.robot.util.MathUtils.getHeadingY;
 
 @SuppressWarnings("unused")
 public class Drivetrain extends SubsystemBase {
-    public final SwerveModule leftFront, rightFront, rightBack, leftBack;
-    public final SwerveModule[] modules;
+    @Getter private final SwerveModule leftFront, rightFront, rightBack, leftBack;
+    private final SwerveModule[] modules;
     private DriveMode mode = DriveMode.FO_SWERVE;
 
-    public final AHRS gyro = new AHRS(SPI.Port.kMXP);
+    @Getter private final AHRS gyro = new AHRS(SPI.Port.kMXP);
     private final Odometer odometer = new Odometer(); //Custom odometer that works for Holonomic Swerve
 
+    @Getter @Setter private double limelightYaw = 0.0;
+    @Getter @Setter private boolean lockDriveWhileTargeting = false;
     public Drivetrain() {
         //Positive is CCW, Negative is CW
         leftFront  = new SwerveModuleProto(1,  130); //165

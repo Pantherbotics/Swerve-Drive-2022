@@ -5,22 +5,26 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.robot.commands.RunDriveMode;
 import frc.robot.commands.RunSwerveJoystick;
+import frc.robot.commands.RunVisionTargeting;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.Limelight;
 import frc.robot.util.AutoPaths;
 import frc.robot.util.DriveMode;
+import lombok.Getter;
 
 import static frc.robot.util.MathUtils.round;
 
 @SuppressWarnings("unused")
 public class RobotContainer {
     //Subsystems
-    public final Drivetrain drivetrain = new Drivetrain();
-    public final SendableChooser<Double> speedChooser;
-    public final AutoPaths autoPaths = new AutoPaths(drivetrain);
+    @Getter private final Drivetrain drivetrain = new Drivetrain();
+    @Getter private final AutoPaths autoPaths = new AutoPaths(drivetrain);
+    private final Limelight limelight = new Limelight();
 
     //Joysticks and Buttons/Inputs
     private final Joystick pJoy = new Joystick(Constants.OIConstants.kDriverJoyID);
@@ -36,7 +40,7 @@ public class RobotContainer {
     private final POVButton sJoyPOVE = new POVButton(pJoy, 90);  //POV East
 
     public RobotContainer(Robot robot) {
-        speedChooser = robot.speedChooser;
+        SendableChooser<Double> speedChooser = robot.getSpeedChooser();
 
         drivetrain.setDefaultCommand(new RunSwerveJoystick(
                 drivetrain, pJoy,
@@ -57,6 +61,10 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         joyBB.whenPressed(drivetrain::zeroHeading);
+        joyBX.whileHeld(new RunVisionTargeting(drivetrain, limelight));
+
+        joyBY.whenPressed(new InstantCommand(() -> drivetrain.setLockDriveWhileTargeting(true)));
+        joyBA.whenReleased(new InstantCommand(() -> drivetrain.setLockDriveWhileTargeting(false)));
 
         //Configure multiple swerve modes
         sJoyPOVN.whenPressed(new RunDriveMode(drivetrain, DriveMode.CAR));
@@ -73,10 +81,10 @@ public class RobotContainer {
         SmartDashboard.putNumber("Gyro", drivetrain.getHeading());
         SmartDashboard.putString("Mode", drivetrain.getMode().getName());
 
-        SmartDashboard.putString("Swerve[1] Data", "A: " + round(drivetrain.leftFront.getAngle(),2) + " S: " + round(drivetrain.leftFront.getDriveVelocity(), 2));
-        SmartDashboard.putString("Swerve[2] Data", "A: " + round(drivetrain.rightFront.getAngle(),2) + " S: " + round(drivetrain.rightFront.getDriveVelocity(), 2));
-        SmartDashboard.putString("Swerve[3] Data", "A: " + round(drivetrain.rightBack.getAngle(),2) + " S: " + round(drivetrain.rightBack.getDriveVelocity(), 2));
-        SmartDashboard.putString("Swerve[4] Data", "A: " + round(drivetrain.leftBack.getAngle(),2) + " S: " + round(drivetrain.leftBack.getDriveVelocity(), 2));
+        SmartDashboard.putString("Swerve[1] Data", "A: " + round(drivetrain.getLeftFront().getAngle(),2) + " S: " + round(drivetrain.getLeftFront().getDriveVelocity(), 2));
+        SmartDashboard.putString("Swerve[2] Data", "A: " + round(drivetrain.getRightFront().getAngle(),2) + " S: " + round(drivetrain.getRightFront().getDriveVelocity(), 2));
+        SmartDashboard.putString("Swerve[3] Data", "A: " + round(drivetrain.getRightBack().getAngle(),2) + " S: " + round(drivetrain.getRightBack().getDriveVelocity(), 2));
+        SmartDashboard.putString("Swerve[4] Data", "A: " + round(drivetrain.getLeftBack().getAngle(),2) + " S: " + round(drivetrain.getLeftBack().getDriveVelocity(), 2));
 
         SmartDashboard.putNumber("Robot Heading", drivetrain.getHeading());
 
@@ -85,8 +93,8 @@ public class RobotContainer {
         SmartDashboard.putString("Robot Location", "X: " + x + " Y: " + y);
 
         //These methods have a warning that they are noisy and may not be useful
-        double vx = drivetrain.gyro.getVelocityX();
-        double vy = drivetrain.gyro.getVelocityY();
+        double vx = drivetrain.getGyro().getVelocityX();
+        double vy = drivetrain.getGyro().getVelocityY();
         SmartDashboard.putNumber("Robot Vel", Math.sqrt(vx*vx + vy*vy));
     }
 }

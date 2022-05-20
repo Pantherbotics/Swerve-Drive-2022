@@ -2,12 +2,13 @@ package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import lombok.Getter;
 
 /**
  * Keeps track of the robot position relative to the field
  */
 public class Odometer {
-    public double x = 0, y = 0;
+    private double x = 0, y = 0;
 
     /**
      * @param x The delta X to add to the current value

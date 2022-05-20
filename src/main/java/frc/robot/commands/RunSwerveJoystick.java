@@ -67,9 +67,15 @@ public class RunSwerveJoystick extends CommandBase {
         // - In order for XR to follow the positive CCW of the gyro, it needs to be negated
 
         // 1. Get real-time joystick inputs, converted to work with Swerve and WPI
-        double xSpeed = -powAxis(getYL(), OIConstants.driverEXP) * speedChooser.get();
-        double ySpeed = -powAxis(getXL(), OIConstants.driverEXP) * speedChooser.get();
-        double turningSpeed = -getXR() * (speedChooser.get()/2D);
+        double xSpeed, ySpeed, turningSpeed;
+        double targetInfluence = drivetrain.getLimelightYaw() / 45;
+        if (drivetrain.isLockDriveWhileTargeting()) {
+            xSpeed = 0; ySpeed = 0; turningSpeed = targetInfluence; //45 degree field of view maybe
+        }else {
+            xSpeed = -powAxis(getYL(), OIConstants.driverEXP) * speedChooser.get();
+            ySpeed = -powAxis(getXL(), OIConstants.driverEXP) * speedChooser.get();
+            turningSpeed = -getXR() * (speedChooser.get()/2D) + targetInfluence;
+        }
 
         // 2. Apply deadband
         xSpeed = Math.abs(xSpeed) > OIConstants.kDeadband ? xSpeed : 0.0;
