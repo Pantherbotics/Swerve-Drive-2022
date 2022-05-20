@@ -68,7 +68,7 @@ public class RunSwerveJoystick extends CommandBase {
 
         // 1. Get real-time joystick inputs, converted to work with Swerve and WPI
         double xSpeed, ySpeed, turningSpeed;
-        double targetInfluence = drivetrain.getLimelightYaw() / 45;
+        double targetInfluence = drivetrain.getLimelightYaw() / 27; //Limelight v1 Yaw ranges [-27, 27]
         if (drivetrain.isLockDriveWhileTargeting()) {
             xSpeed = 0; ySpeed = 0; turningSpeed = targetInfluence; //45 degree field of view maybe
         }else {
