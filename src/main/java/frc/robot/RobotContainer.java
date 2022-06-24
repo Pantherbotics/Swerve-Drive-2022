@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.robot.commands.RunDriveMode;
 import frc.robot.commands.RunSwerveJoystick;
-import frc.robot.commands.RunTimer;
 import frc.robot.commands.RunVisionTargeting;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Limelight;
@@ -45,7 +44,7 @@ public class RobotContainer {
     private final POVButton sJoyPOVE = new POVButton(pJoy, 90);  //POV East
 
     public RobotContainer(Robot robot) {
-        SendableChooser<Double> speedChooser = robot.getSpeedChooser();
+        SendableChooser<Double> speedChooser = robot.speedChooser;
 
         drivetrain.setDefaultCommand(new RunSwerveJoystick(
                 drivetrain, pJoy,
@@ -84,7 +83,6 @@ public class RobotContainer {
 
         joyRB.whenPressed(new InstantCommand(() -> ((SwerveModuleProto)drivetrain.getLeftFront()).getDrive().set(0.1)));
         joyRB.whenReleased(new InstantCommand(() -> ((SwerveModuleProto)drivetrain.getLeftFront()).getDrive().set(0)));
-
     }
 
 
