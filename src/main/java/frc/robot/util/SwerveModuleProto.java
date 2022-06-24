@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
+import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
 import static frc.robot.util.MathUtils.boundHalfDegrees;
@@ -33,12 +34,12 @@ public class SwerveModuleProto extends SwerveModule {
     private final double offsetDeg;
 
     //Drive objects for the Module
-    private final CANSparkMax drive;
+    @Getter private final CANSparkMax drive;
     private final RelativeEncoder driveEncoder;
     private final SparkMaxPIDController drivePID;
 
     //Steering objects for the Module (encoder will be analogInput OR canCoder)
-    private final TalonSRX steer;
+    @Getter private final TalonSRX steer;
     @Nullable private final AnalogInput analogInput; //Nullable because it may not be used
     @Nullable private final CANCoder canCoder; //Nullable because it may not be used
 

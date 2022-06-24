@@ -1,12 +1,16 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
+import com.revrobotics.CANSparkMax;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.util.*;
@@ -121,6 +125,18 @@ public class Drivetrain extends SubsystemBase {
     public void periodic() {
         //Update the odometry, using our own vector-based odometry for Holonomic Swerve
         updateOdometry();
+        //TalonSRX srx = ((SwerveModuleProto) leftFront).getSteer();
+        //SmartDashboard.putNumber("LF Steer Pos", srx.getSelectedSensorPosition());
+        //double output = srx.getStatorCurrent();
+        //SmartDashboard.putNumber("LF Steer Curr", output);
+
+        CANSparkMax spark = ((SwerveModuleProto) leftFront).getDrive();
+        SmartDashboard.putNumber("LF Drive Pos", spark.getEncoder().getPosition());
+        double output = spark.getOutputCurrent();
+        SmartDashboard.putNumber("LF Drive Curr", output);
+        if (output >= 30D) {
+            spark.getEncoder().setPosition(0);
+        }
     }
 
     /**

@@ -10,11 +10,13 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.robot.commands.RunDriveMode;
 import frc.robot.commands.RunSwerveJoystick;
+import frc.robot.commands.RunTimer;
 import frc.robot.commands.RunVisionTargeting;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Limelight;
 import frc.robot.util.AutoPaths;
 import frc.robot.util.DriveMode;
+import frc.robot.util.SwerveModuleProto;
 import lombok.Getter;
 
 import static frc.robot.util.MathUtils.round;
@@ -32,6 +34,9 @@ public class RobotContainer {
     private final JoystickButton joyBB = new JoystickButton(pJoy, 2); //Button B
     private final JoystickButton joyBX = new JoystickButton(pJoy, 3); //Button X
     private final JoystickButton joyBY = new JoystickButton(pJoy, 4); //Button Y
+
+    private final JoystickButton joyRB = new JoystickButton(pJoy, 6); //Right Bumper
+
     private final POVButton sJoyPOVN = new POVButton(pJoy, 0);   //POV North
     private final POVButton sJoyPOVNE = new POVButton(pJoy, 45); //POV North East
     private final POVButton sJoyPOVS = new POVButton(pJoy, 180); //POV South
@@ -47,6 +52,7 @@ public class RobotContainer {
                 speedChooser::getSelected,
                 drivetrain::getMode
         ));
+
         //For easy calibration, use this code instead to have all wheels drive forward
         //drivetrain.setDefaultCommand(new RunSwerveJoystick(drivetrain, () -> 0.1, () -> 0.0, () -> 0.0));
 
@@ -74,6 +80,11 @@ public class RobotContainer {
 
         sJoyPOVNE.whenPressed(new RunDriveMode(drivetrain, DriveMode.WESTCOAST));
         sJoyPOVSE.whileHeld(new RunDriveMode(drivetrain, DriveMode.TANK));
+
+
+        joyRB.whenPressed(new InstantCommand(() -> ((SwerveModuleProto)drivetrain.getLeftFront()).getDrive().set(0.1)));
+        joyRB.whenReleased(new InstantCommand(() -> ((SwerveModuleProto)drivetrain.getLeftFront()).getDrive().set(0)));
+
     }
 
 
