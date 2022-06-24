@@ -18,16 +18,16 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.util.NamedAuto;
-import lombok.Getter;
 
 public class Robot extends TimedRobot {
-    private final SendableChooser<NamedAuto> autoChooser = new SendableChooser<>();
-    @Getter private final SendableChooser<Double> speedChooser = new SendableChooser<>();
+    public final SendableChooser<NamedAuto> autoChooser = new SendableChooser<>();
+    public final SendableChooser<Double> speedChooser = new SendableChooser<>();
     private Command autonomousCommand;
     private RobotContainer robotContainer;
 
@@ -41,7 +41,7 @@ public class Robot extends TimedRobot {
         robotContainer = new RobotContainer(this);
 
         autoChooser.setDefaultOption("None", new NamedAuto("None", (Command) null));
-        for (NamedAuto command : robotContainer.getAutoPaths().getPaths()) {
+        for (NamedAuto command : robotContainer.autoPaths.paths) {
             autoChooser.addOption(command.getName(), command);
         }
         SmartDashboard.putData(autoChooser);
@@ -59,10 +59,12 @@ public class Robot extends TimedRobot {
         if (auto != null && !auto.getName().equals(autoName)) {
             autoName = auto.getName();
             //If the pose is valid, reset the odometry with it
-            if (auto.getStartPose() != null) {
-                robotContainer.getDrivetrain().resetOdometry(auto.getStartPose());
+            if (auto.getStartPose() != null && auto.getStartRotation() != null) {
+                DriverStation.reportError(auto.getStartPose().toString(), false);
+                robotContainer.drivetrain.resetOdometry(auto.getStartRotation(), auto.getStartPose());
             }else { //Else, reset the odometry to 0 degrees at 0,0
-                robotContainer.getDrivetrain().resetOdometry(new Pose2d(new Translation2d(0, 0), Rotation2d.fromDegrees(0)));
+                DriverStation.reportError("0 StartPose", false);
+                robotContainer.drivetrain.resetOdometry(Rotation2d.fromDegrees(0), new Pose2d(new Translation2d(0, 0), Rotation2d.fromDegrees(0)));
             }
         }
     }

@@ -3,10 +3,10 @@ package frc.robot.util;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.commands.PPSwerveControllerCommand;
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -121,7 +121,7 @@ public class AutoPaths {
      * @param trajectoryNames The names of the trajectories to be loaded
      * @return the Command that will run the controller to follow the trajectories
      */
-    public @Nullable Pair<Command, Pose2d> getAutoCmdFromTrajectories(boolean firstTraj, String... trajectoryNames) {
+    public @Nullable Tuple<Command, Rotation2d, Pose2d> getAutoCmdFromTrajectories(boolean firstTraj, String... trajectoryNames) {
         List<PathPlannerTrajectory> trajectories = new ArrayList<>();
         for (String name : trajectoryNames) {
             trajectories.add(loadTrajectory(name));
@@ -143,7 +143,7 @@ public class AutoPaths {
      * @param trajectories The trajectories to be wrapped together
      * @return the Command that will run the controller to follow the trajectories
      */
-    private @Nullable Pair<Command, Pose2d> wrapTrajectories(boolean firstTraj, PathPlannerTrajectory... trajectories) {
+    private @Nullable Tuple<Command, Rotation2d, Pose2d> wrapTrajectories(boolean firstTraj, PathPlannerTrajectory... trajectories) {
         //Add a check in case trajectories are null, or empty (maybe the default is no auto, stuff like that)
         if (trajectories == null || trajectories.length == 0) { return null; }
 
@@ -160,8 +160,8 @@ public class AutoPaths {
 
         //Add the initial command to calibrate the odometry
         if (firstTraj) {
-            commands.add(0, new InstantCommand(() -> drivetrain.resetOdometry(trajectories[0].getInitialPose())));
+            commands.add(0, new InstantCommand(() -> drivetrain.resetOdometry(trajectories[0].getInitialState().holonomicRotation, trajectories[0].getInitialPose())));
         }
-        return Pair.of(new SequentialCommandGroup(commands.toArray(Command[]::new)), trajectories[0].getInitialPose());
+        return Tuple.of(new SequentialCommandGroup(commands.toArray(Command[]::new)), trajectories[0].getInitialState().holonomicRotation, trajectories[0].getInitialPose());
     }
 }

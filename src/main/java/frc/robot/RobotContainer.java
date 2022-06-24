@@ -98,6 +98,8 @@ public class RobotContainer {
         SmartDashboard.putString("Swerve[4] Data", "A: " + round(drivetrain.getLeftBack().getAngle(),2) + " S: " + round(drivetrain.getLeftBack().getDriveVelocity(), 2));
 
         SmartDashboard.putNumber("Robot Heading", drivetrain.getHeading());
+        SmartDashboard.putNumber("Robot GyroInit", drivetrain.autoGyroInit);
+
 
         double x = round(drivetrain.getPose().getTranslation().getX(),3);
         double y = round(drivetrain.getPose().getTranslation().getY(),3);
