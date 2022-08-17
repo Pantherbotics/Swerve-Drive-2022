@@ -16,13 +16,6 @@ public class NamedAuto {
     @Nullable private final Pose2d startPose;
     @Nullable private final Command command;
 
-    public NamedAuto(String name, @Nullable Command command) {
-        this.name = name;
-        this.command = command;
-        this.startRotation = null;
-        this.startPose = null;
-    }
-
     public NamedAuto(String name, @Nullable Tuple<Command, Rotation2d, Pose2d> data) {
         this.name = name;
         if (data == null) {

@@ -26,10 +26,10 @@ public class Drivetrain extends SubsystemBase {
 
     public Drivetrain() {
         //Positive is CCW, Negative is CW
-        leftFront  = new SwerveModuleProto(1,  130); //165
-        rightFront = new SwerveModuleProto(2,  225); //290
-        rightBack  = new SwerveModuleProto(3,  350); //90
-        leftBack   = new SwerveModuleProto(4,  163); //-20
+        leftFront  = new SwerveModuleProto(1,  -66);
+        rightFront = new SwerveModuleProto(2,  130);
+        rightBack  = new SwerveModuleProto(3,  107);
+        leftBack   = new SwerveModuleProto(4,  -42);
         modules = new SwerveModule[] {leftFront, rightFront, rightBack, leftBack};
 
         //Zero the gyro after 1 second while it calibrates

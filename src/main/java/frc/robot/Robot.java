@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.util.NamedAuto;
+import frc.robot.util.Tuple;
 
 public class Robot extends TimedRobot {
     public final SendableChooser<NamedAuto> autoChooser = new SendableChooser<>();
@@ -40,7 +41,7 @@ public class Robot extends TimedRobot {
 
         robotContainer = new RobotContainer(this);
 
-        autoChooser.setDefaultOption("None", new NamedAuto("None", (Command) null));
+        autoChooser.setDefaultOption("None", new NamedAuto("None", Tuple.of(null, new Rotation2d(0), new Pose2d(0, 0, new Rotation2d(0)))));
         for (NamedAuto command : robotContainer.autoPaths.paths) {
             autoChooser.addOption(command.getName(), command);
         }
