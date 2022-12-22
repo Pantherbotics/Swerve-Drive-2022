@@ -33,10 +33,10 @@ public class Drivetrain extends SubsystemBase {
     @Getter @Setter private boolean lockDriveWhileTargeting = false;
     public Drivetrain() {
         //Positive is CCW, Negative is CW
-        leftFront  = new SwerveModuleProto(1,  130); //165
-        rightFront = new SwerveModuleProto(2,  225); //290
-        rightBack  = new SwerveModuleProto(3,  350); //90
-        leftBack   = new SwerveModuleProto(4,  163); //-20
+        leftFront  = new SwerveModuleProto(1,  70); //130
+        rightFront = new SwerveModuleProto(2,  225+52);
+        rightBack  = new SwerveModuleProto(3,  350-163);
+        leftBack   = new SwerveModuleProto(4,  163+108);
         modules = new SwerveModule[] {leftFront, rightFront, rightBack, leftBack};
 
         //Zero the gyro after 1 second while it calibrates
@@ -59,7 +59,10 @@ public class Drivetrain extends SubsystemBase {
      * @return the current heading of the robot in degrees [-180, 180]
      */
     public double getHeading() {
-        return MathUtils.boundHalfDegrees(-gyro.getYaw() + autoGyroInit);
+        //getYaw for flat mounted gyro
+        //getRoll for vertically mounted gyro (where the f**k did you place the rio)
+
+        return MathUtils.boundHalfDegrees(-gyro.getRoll() + autoGyroInit - 90);
         //return -gyro.getYaw();
     }
 
